@@ -29,10 +29,10 @@ export function LoginPage() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-xl">Log in</CardTitle>
-        <CardDescription>Welcome back — enter your details to continue.</CardDescription>
+    <Card className="w-full rounded-[20px] p-2">
+      <CardHeader className="items-center text-center">
+        <CardTitle className="text-2xl">Welcome back</CardTitle>
+        <CardDescription>Sign in to keep your stock on track</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

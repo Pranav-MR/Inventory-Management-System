@@ -30,10 +30,10 @@ export function SignupPage() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-xl">Sign up</CardTitle>
-        <CardDescription>Create an account to start tracking your inventory.</CardDescription>
+    <Card className="w-full rounded-[20px] p-2">
+      <CardHeader className="items-center text-center">
+        <CardTitle className="text-2xl">Create your account</CardTitle>
+        <CardDescription>Start tracking stock, batches, and expiry in minutes</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Archive } from 'lucide-react';
 import { useArchiveItem, useItem } from '../api/items';
 import { useProjection, useProjectionSummary } from '../api/projections';
@@ -39,15 +39,21 @@ export function ItemDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">{item.name}</h1>
-          <p className="text-muted-foreground text-sm">
+          <Link
+            to="/items"
+            className="text-muted-foreground inline-block text-[13px] transition-transform hover:scale-[1.06]"
+          >
+            ← Items
+          </Link>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">{item.name}</h1>
+          <p className="text-muted-foreground mt-0.5 text-[13px]">
             {item.unit}
             {item.category ? ` · ${item.category}` : ''}
           </p>
         </div>
-        <Button variant="outline" className="text-destructive hover:text-destructive" onClick={handleArchive}>
+        <Button variant="destructive" onClick={handleArchive}>
           <Archive className="size-4" />
           Archive item
         </Button>
@@ -91,7 +97,7 @@ export function ItemDetailPage() {
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Batches</h2>
+          <h2 className="text-lg font-bold tracking-tight">Batches</h2>
           <AcceptBatchDialog itemId={item.id} hasConsumptionRate={Boolean(item.consumptionRate)} />
         </div>
         <BatchList itemId={item.id} batches={item.batches} />

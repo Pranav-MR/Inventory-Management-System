@@ -34,12 +34,12 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
 
   return (
     <TableRow>
-      <TableCell>{batch.batchLabel ?? '—'}</TableCell>
+      <TableCell className="font-semibold">{batch.batchLabel ?? '—'}</TableCell>
       <TableCell className="text-muted-foreground">{format(parseISO(batch.receivedDate), 'MMM d, yyyy')}</TableCell>
-      <TableCell className={cn(isExpired ? 'text-destructive font-medium' : 'text-muted-foreground')}>
+      <TableCell className={cn(isExpired ? 'text-destructive font-bold' : 'text-muted-foreground')}>
         {format(parseISO(batch.expiryDate), 'MMM d, yyyy')}
       </TableCell>
-      <TableCell className="text-muted-foreground">{batch.quantityReceived}</TableCell>
+      <TableCell className="text-muted-foreground font-mono">{batch.quantityReceived}</TableCell>
       <TableCell>
         {editing ? (
           <div className="flex items-center gap-1">
@@ -63,7 +63,7 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="hover:decoration-muted-foreground underline decoration-dotted underline-offset-4"
+            className="hover:decoration-muted-foreground font-mono underline decoration-dotted underline-offset-4"
           >
             {batch.quantityRemaining}
           </button>

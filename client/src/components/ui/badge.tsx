@@ -5,15 +5,19 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 [&>svg]:size-3 transition-colors',
+  'inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold w-fit whitespace-nowrap shrink-0 gap-1 [&>svg]:size-3 transition-colors',
   {
     variants: {
       variant: {
         default: 'border-transparent bg-primary text-primary-foreground',
-        secondary: 'border-transparent bg-secondary text-secondary-foreground',
-        destructive: 'border-transparent bg-destructive text-destructive-foreground',
-        success: 'border-transparent bg-success/15 text-success',
-        warning: 'border-transparent bg-warning/20 text-warning',
+        secondary: 'border-border bg-secondary text-secondary-foreground',
+        destructive:
+          'border-destructive/40 bg-destructive/12 text-destructive shadow-[0_0_12px_rgba(251,113,133,0.25)] not-dark:shadow-none',
+        success:
+          'border-success/40 bg-success/12 text-success shadow-[0_0_12px_rgba(52,211,153,0.25)] not-dark:shadow-none',
+        warning:
+          'border-warning/40 bg-warning/15 text-warning shadow-[0_0_12px_rgba(251,191,36,0.25)] not-dark:shadow-none',
+        neon: 'border-foreground/30 bg-foreground/8 text-foreground shadow-[0_0_10px_rgba(255,255,255,0.4)] not-dark:shadow-none',
         outline: 'text-foreground',
       },
     },

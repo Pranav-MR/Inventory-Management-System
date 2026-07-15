@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { NotificationEventType, NotificationPreference } from '../../types/notification';
@@ -64,15 +65,17 @@ export function NotificationPreferenceForm() {
               const pref = prefs.find((p) => p.eventType === type)!;
               return (
                 <TableRow key={type}>
-                  <TableCell className="font-medium">{label}</TableCell>
-                  <TableCell className="text-muted-foreground">Email</TableCell>
+                  <TableCell className="font-semibold">{label}</TableCell>
+                  <TableCell>
+                    <Badge variant="neon">Email</Badge>
+                  </TableCell>
                   <TableCell>
                     <Input
                       type="number"
                       min={0}
                       value={pref.leadTimeDays}
                       onChange={(e) => updatePref(type, { leadTimeDays: Number(e.target.value) })}
-                      className="h-8 w-20"
+                      className="h-8 w-20 font-mono"
                     />
                   </TableCell>
                   <TableCell>

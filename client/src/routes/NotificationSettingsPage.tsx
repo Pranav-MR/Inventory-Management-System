@@ -17,19 +17,19 @@ export function NotificationSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Notifications</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Email is the only channel available for now — SMS and WhatsApp are coming soon.
         </p>
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold tracking-tight">Preferences</h2>
+        <h2 className="text-base font-bold tracking-tight">Preferences</h2>
         <NotificationPreferenceForm />
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold tracking-tight">Recent notifications</h2>
+        <h2 className="text-base font-bold tracking-tight">Recent notifications</h2>
         {!logs || logs.length === 0 ? (
           <Card className="text-muted-foreground px-5 py-8 text-center text-sm">No notifications sent yet.</Card>
         ) : (
@@ -45,10 +45,10 @@ export function NotificationSettingsPage() {
               <TableBody>
                 {logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground font-mono">
                       {format(parseISO(log.createdAt), 'MMM d, yyyy HH:mm')}
                     </TableCell>
-                    <TableCell>{log.subject}</TableCell>
+                    <TableCell className="font-semibold">{log.subject}</TableCell>
                     <TableCell>
                       <Badge variant={STATUS_VARIANT[log.status] ?? 'secondary'}>{log.status}</Badge>
                     </TableCell>

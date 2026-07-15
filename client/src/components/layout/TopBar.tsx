@@ -40,16 +40,16 @@ export function TopBar({ title }: { title?: string }) {
         </SheetContent>
       </Sheet>
 
-      <h1 className="flex-1 truncate text-sm font-medium md:text-base">{title}</h1>
+      <h1 className="font-heading flex-1 truncate text-sm font-bold md:text-base">{title}</h1>
 
       <ThemeToggle />
 
       {user && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-full outline-none">
-              <Avatar className="size-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+            <button className="rounded-full p-[2px] outline-none [background:linear-gradient(135deg,#4ade80,#3b82f6)]">
+              <Avatar className="bg-background size-8">
+                <AvatarFallback className="text-foreground bg-transparent text-xs font-bold">
                   {initialsFrom(user.name ?? user.email)}
                 </AvatarFallback>
               </Avatar>

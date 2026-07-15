@@ -31,23 +31,23 @@ export function ExpiryWarningBanner({ summary }: { summary: ProjectionSummary })
   if (banners.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2.5">
       {banners.map((b, i) => (
         <div
           key={i}
           className={cn(
-            'flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm',
+            'flex items-center gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px] backdrop-blur-lg',
             b.tone === 'critical'
-              ? 'border-destructive/30 bg-destructive/10 text-destructive'
-              : 'border-warning/30 bg-warning/10 text-warning-foreground dark:text-warning',
+              ? 'border-destructive/20 border-l-destructive bg-destructive/6 text-destructive shadow-[0_0_24px_rgba(251,113,133,0.15)]'
+              : 'border-warning/20 border-l-warning bg-warning/6 text-warning shadow-[0_0_24px_rgba(251,191,36,0.12)]',
           )}
         >
           {b.tone === 'critical' ? (
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <AlertTriangle className="size-[18px] shrink-0" />
           ) : (
-            <CalendarClock className="mt-0.5 size-4 shrink-0" />
+            <CalendarClock className="size-[18px] shrink-0" />
           )}
-          {b.text}
+          <span>{b.text}</span>
         </div>
       ))}
     </div>

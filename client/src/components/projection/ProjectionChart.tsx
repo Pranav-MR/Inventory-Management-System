@@ -34,13 +34,17 @@ export function ProjectionChart({ result }: { result: SimulationResult }) {
     .map((d) => ({ date: d.date, totalRemaining: Math.round(d.totalRemaining * 100) / 100 }));
 
   return (
-    <div>
+    <div className="chart-glow">
       <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="stockFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.25} />
+              <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.3} />
               <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="var(--color-chart-1)" />
+              <stop offset="100%" stopColor="var(--color-chart-2)" />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
@@ -60,8 +64,8 @@ export function ProjectionChart({ result }: { result: SimulationResult }) {
           <Area
             type="monotone"
             dataKey="totalRemaining"
-            stroke="var(--color-chart-1)"
-            strokeWidth={2}
+            stroke="url(#strokeGrad)"
+            strokeWidth={3}
             fill="url(#stockFill)"
             isAnimationActive={false}
           />

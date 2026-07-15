@@ -32,7 +32,7 @@ export function ConsumptionRateForm({ itemId, current }: { itemId: string; curre
           step="any"
           value={ratePerPeriod}
           onChange={(e) => setRatePerPeriod(e.target.value)}
-          className="w-28"
+          className="w-28 font-mono"
         />
       </div>
       <div className="flex flex-col gap-1.5">

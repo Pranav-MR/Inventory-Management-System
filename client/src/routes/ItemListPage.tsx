@@ -17,7 +17,7 @@ export function ItemListPage() {
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">Items</h2>
+          <h2 className="text-lg font-bold tracking-tight">Items</h2>
           <p className="text-muted-foreground text-sm">Track batches, expiry, and consumption for every item.</p>
         </div>
         <ItemForm />

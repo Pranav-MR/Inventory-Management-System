@@ -29,7 +29,10 @@ export function ItemListTable({ items }: { items: Item[] }) {
           {items.map((item) => (
             <TableRow key={item.id}>
               <TableCell>
-                <Link to={`/items/${item.id}`} className="font-medium hover:underline">
+                <Link
+                  to={`/items/${item.id}`}
+                  className="inline-block w-fit font-bold transition-transform hover:scale-[1.05]"
+                >
                   {item.name}
                 </Link>
                 {item.isArchived && (
@@ -39,10 +42,12 @@ export function ItemListTable({ items }: { items: Item[] }) {
                 )}
               </TableCell>
               <TableCell className="text-muted-foreground">{item.unit}</TableCell>
-              <TableCell className="text-muted-foreground">{item.batches.length}</TableCell>
+              <TableCell className="text-muted-foreground font-mono">{item.batches.length}</TableCell>
               <TableCell className="text-muted-foreground">
                 {item.consumptionRate ? (
-                  `${item.consumptionRate.ratePerPeriod} / ${item.consumptionRate.periodUnit.toLowerCase()}`
+                  <span className="font-mono">
+                    {item.consumptionRate.ratePerPeriod} / {item.consumptionRate.periodUnit.toLowerCase()}
+                  </span>
                 ) : (
                   <Badge variant="warning">Not set</Badge>
                 )}

@@ -12,8 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-
-const COMMON_UNITS = ['tablet', 'bottle', 'packet', 'kg', 'litre', 'box', 'piece'];
+import { UnitCombobox } from './UnitCombobox';
 
 export function ItemForm() {
   const createItem = useCreateItem();
@@ -56,19 +55,7 @@ export function ItemForm() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="item-unit">Unit</Label>
-            <Input
-              id="item-unit"
-              required
-              list="unit-suggestions"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              placeholder="tablet"
-            />
-            <datalist id="unit-suggestions">
-              {COMMON_UNITS.map((u) => (
-                <option key={u} value={u} />
-              ))}
-            </datalist>
+            <UnitCombobox id="item-unit" value={unit} onChange={setUnit} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="item-category">Category (optional)</Label>
