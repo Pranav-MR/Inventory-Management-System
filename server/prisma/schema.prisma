@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PeriodUnit {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum BatchStatus {
+  ACTIVE
+  DEPLETED
+  EXPIRED
+  DISCARDED
+}
+
+enum NotificationChannelType {
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum NotificationEventType {
+  LOW_STOCK
+  STOCK_OUT_IMMINENT
+  EXPIRY_WASTE_WARNING
+  REQUEST_NEWER_BATCH
+  CANDIDATE_BATCH_WASTE_WARNING
+  UPCOMING_DELIVERY_REMINDER
+}
+
+model User {
+  id                String                    @id @default(cuid())
+  email             String                    @unique
+  passwordHash      String
+  name              String?
+  timezone          String                    @default("UTC")
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  items             Item[]
+  notificationPrefs NotificationPreference[]
+  notificationLogs  NotificationLog[]
+  refreshTokens     RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Item {
+  id                      String                   @id @default(cuid())
+  userId                  String
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                    String
+  category                String?
+  unit                    String
+  lowStockThreshold       Decimal?                 @db.Decimal(10, 3)
+  isArchived              Boolean                  @default(false)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  consumptionRate         ConsumptionRate?
+  recurringSupplySchedule RecurringSupplySchedule?
+  batches                 Batch[]
+  notificationLogs        NotificationLog[]
+
+  @@index([userId])
+}
+
+model ConsumptionRate {
+  id            String     @id @default(cuid())
+  itemId        String     @unique
+  item          Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  ratePerPeriod Decimal    @db.Decimal(10, 3)
+  periodUnit    PeriodUnit
+  updatedAt     DateTime   @updatedAt
+}
+
+model RecurringSupplySchedule {
+  id                       String     @id @default(cuid())
+  itemId                   String     @unique
+  item                     Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  intervalValue            Int
+  intervalUnit             PeriodUnit
+  quantityPerDelivery      Decimal    @db.Decimal(10, 3)
+  nextExpectedDeliveryDate DateTime
+  assumedExpiryForFuture   DateTime?
+  isActive                 Boolean    @default(true)
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+}
+
+model Batch {
+  id                String      @id @default(cuid())
+  itemId            String
+  item              Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  batchLabel        String?
+  receivedDate      DateTime
+  expiryDate        DateTime
+  quantityReceived  Decimal     @db.Decimal(10, 3)
+  quantityRemaining Decimal     @db.Decimal(10, 3)
+  quantityAsOfDate  DateTime    @default(now())
+  status            BatchStatus @default(ACTIVE)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([itemId, expiryDate])
+}
+
+model NotificationPreference {
+  id           String                  @id @default(cuid())
+  userId       String
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType    NotificationEventType
+  channel      NotificationChannelType @default(EMAIL)
+  isEnabled    Boolean                 @default(true)
+  leadTimeDays Int                     @default(7)
+  updatedAt    DateTime                @updatedAt
+
+  @@unique([userId, eventType, channel])
+}
+
+model NotificationLog {
+  id        String                  @id @default(cuid())
+  userId    String
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    String?
+  item      Item?                   @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  eventType NotificationEventType
+  channel   NotificationChannelType
+  subject   String
+  body      String
+  status    String
+  error     String?
+  sentAt    DateTime?
+  dedupeKey String                  @unique
+  createdAt DateTime                @default(now())
+
+  @@index([userId, itemId])
+}
