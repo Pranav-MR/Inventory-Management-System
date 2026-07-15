@@ -85,7 +85,10 @@ export interface ProjectionSummary {
   daysOfStockRemaining: number | null;
   nextExpiryDate: Date | null;
   requestNewerExpiryFromDate: Date | null;
+  lastAcceptableDateForCurrentExpiry: Date | null;
+  atRiskExpiryDate: Date | null;
   hasExpiryWasteWarning: boolean;
+  nextDeliveryRecommendedQuantity: number | null;
 }
 
 export async function getProjectionSummary(userId: string, itemId: string): Promise<ProjectionSummary> {
@@ -102,12 +105,17 @@ export async function getProjectionSummary(userId: string, itemId: string): Prom
     .filter((b) => b.quantityRemaining > 0)
     .sort((a, b) => a.expiryDate.getTime() - b.expiryDate.getTime())[0]?.expiryDate ?? null;
 
+  const unsafeEvent = result.events.find((e) => e.type === 'DELIVERY_UNSAFE_FOR_CURRENT_EXPIRY');
+
   return {
     stockOutDate: result.stockOutDate,
     daysOfStockRemaining: result.stockOutDate ? diffInDays(result.stockOutDate, today) : null,
     nextExpiryDate,
     requestNewerExpiryFromDate: result.requestNewerExpiryFromDate,
+    lastAcceptableDateForCurrentExpiry: result.lastAcceptableDateForCurrentExpiry,
+    atRiskExpiryDate: unsafeEvent?.expiryDate ?? null,
     hasExpiryWasteWarning: result.expiryWasteEvents.length > 0,
+    nextDeliveryRecommendedQuantity: result.nextDeliveryRecommendedQuantity,
   };
 }
 

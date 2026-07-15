@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
+import { roundQty } from '@/lib/format';
 import type { SimulationResult } from '../../types/projection';
 
 interface ChartPoint {
@@ -21,7 +22,7 @@ function TooltipContent({ active, payload, label }: { active?: boolean; payload?
   return (
     <div className="bg-popover text-popover-foreground rounded-md border px-2.5 py-1.5 text-xs shadow-md">
       <div className="text-muted-foreground">{format(parseISO(label), 'MMM d, yyyy')}</div>
-      <div className="font-medium">{payload[0].value.toFixed(1)} remaining</div>
+      <div className="font-medium">{roundQty(payload[0].value)} remaining</div>
     </div>
   );
 }
@@ -31,7 +32,7 @@ export function ProjectionChart({ result }: { result: SimulationResult }) {
   const step = Math.max(1, Math.floor(result.days.length / 180));
   const data: ChartPoint[] = result.days
     .filter((_, i) => i % step === 0 || i === result.days.length - 1)
-    .map((d) => ({ date: d.date, totalRemaining: Math.round(d.totalRemaining * 100) / 100 }));
+    .map((d) => ({ date: d.date, totalRemaining: roundQty(d.totalRemaining) }));
 
   return (
     <div className="chart-glow">
@@ -59,6 +60,8 @@ export function ProjectionChart({ result }: { result: SimulationResult }) {
             tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
             stroke="var(--color-border)"
             width={40}
+            allowDecimals={false}
+            tickFormatter={(v: number) => String(roundQty(v))}
           />
           <Tooltip content={<TooltipContent />} />
           <Area

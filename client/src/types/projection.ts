@@ -18,6 +18,7 @@ export interface SimulationResult {
   expiryWasteEvents: Array<{ batchId: string; wastedQuantity: number; date: string }>;
   lastAcceptableDateForCurrentExpiry: string | null;
   requestNewerExpiryFromDate: string | null;
+  nextDeliveryRecommendedQuantity: number | null;
 }
 
 export interface ProjectionSummary {
@@ -25,7 +26,10 @@ export interface ProjectionSummary {
   daysOfStockRemaining: number | null;
   nextExpiryDate: string | null;
   requestNewerExpiryFromDate: string | null;
+  lastAcceptableDateForCurrentExpiry: string | null;
+  atRiskExpiryDate: string | null;
   hasExpiryWasteWarning: boolean;
+  nextDeliveryRecommendedQuantity: number | null;
 }
 
 export interface EvaluateCandidateResult {

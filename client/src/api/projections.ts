@@ -2,13 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './client';
 import type { ProjectionSummary, SimulationResult } from '../types/projection';
 
-export function useProjectionSummary(itemId: string) {
-  return useQuery({
-    queryKey: ['items', itemId, 'projection', 'summary'],
+export function projectionSummaryQueryOptions(itemId: string) {
+  return {
+    queryKey: ['items', itemId, 'projection', 'summary'] as const,
     queryFn: () => apiClient.get<ProjectionSummary>(`/items/${itemId}/projection/summary`).then((r) => r.data),
-    enabled: !!itemId,
     retry: false,
-  });
+  };
+}
+
+export function useProjectionSummary(itemId: string) {
+  return useQuery({ ...projectionSummaryQueryOptions(itemId), enabled: !!itemId });
 }
 
 export function useProjection(itemId: string, horizonDays = 365) {

@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { Plus, TriangleAlert } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Info, Plus, TriangleAlert } from 'lucide-react';
 import { useCreateBatch, useEvaluateCandidateBatch } from '../../api/batches';
+import { projectionSummaryQueryOptions } from '../../api/projections';
+import { ceilQty, roundQty } from '@/lib/format';
+import { describeNextDeliveryRecommendation } from '../projection/NextDeliveryRecommendationCallout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,10 +20,13 @@ import {
 export function AcceptBatchDialog({
   itemId,
   hasConsumptionRate,
+  quantityPerDelivery,
 }: {
   itemId: string;
   hasConsumptionRate: boolean;
+  quantityPerDelivery: number | null;
 }) {
+  const queryClient = useQueryClient();
   const evaluateCandidate = useEvaluateCandidateBatch(itemId);
   const createBatch = useCreateBatch(itemId);
 
@@ -29,6 +36,10 @@ export function AcceptBatchDialog({
   const [expiryDate, setExpiryDate] = useState('');
   const [quantityReceived, setQuantityReceived] = useState('');
   const [wasteWarning, setWasteWarning] = useState<{ wastedQuantity: number } | null>(null);
+  const [deliveryWarning, setDeliveryWarning] = useState<{
+    atRiskExpiryDate: string | null;
+    recommendedQuantity: number;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function resetForm() {
@@ -36,6 +47,7 @@ export function AcceptBatchDialog({
     setQuantityReceived('');
     setExpiryDate('');
     setWasteWarning(null);
+    setDeliveryWarning(null);
     setError(null);
   }
 
@@ -44,15 +56,33 @@ export function AcceptBatchDialog({
       batchLabel: batchLabel || undefined,
       receivedDate: new Date(receivedDate).toISOString(),
       expiryDate: new Date(expiryDate).toISOString(),
-      quantityReceived: Number(quantityReceived),
+      quantityReceived: roundQty(Number(quantityReceived)),
     });
+    setWasteWarning(null);
+
+    // Check whether the very next scheduled delivery at this item's current expiry
+    // would already be unsafe to accept, and surface that immediately rather than
+    // relying on the user to notice the passive banner on the item page.
+    if (hasConsumptionRate) {
+      try {
+        const summary = await queryClient.fetchQuery(projectionSummaryQueryOptions(itemId));
+        const recommendedQuantity = summary.nextDeliveryRecommendedQuantity;
+        if (recommendedQuantity !== null && (quantityPerDelivery === null || recommendedQuantity < quantityPerDelivery)) {
+          setDeliveryWarning({ atRiskExpiryDate: summary.atRiskExpiryDate, recommendedQuantity });
+          return;
+        }
+      } catch {
+        // Fail open — a projection-fetch hiccup shouldn't block a successful batch add.
+      }
+    }
+
     resetForm();
     setOpen(false);
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const quantity = Number(quantityReceived);
+    const quantity = roundQty(Number(quantityReceived));
     if (!quantity || !expiryDate) return;
     setError(null);
 
@@ -94,84 +124,108 @@ export function AcceptBatchDialog({
         <DialogHeader>
           <DialogTitle>Add batch</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="batch-label">Label (optional)</Label>
-            <Input
-              id="batch-label"
-              value={batchLabel}
-              onChange={(e) => setBatchLabel(e.target.value)}
-              placeholder="e.g. July batch"
-            />
+
+        {deliveryWarning ? (
+          <div className="flex flex-col gap-3">
+            <div className="border-success/20 border-l-success bg-success/6 text-success flex items-start gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px]">
+              <Info className="mt-0.5 size-[18px] shrink-0" />
+              <span>
+                Batch added. However:{' '}
+                {describeNextDeliveryRecommendation(deliveryWarning.atRiskExpiryDate, deliveryWarning.recommendedQuantity)}
+              </span>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setOpen(false);
+                }}
+              >
+                Got it
+              </Button>
+            </DialogFooter>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="batch-received">Received</Label>
+              <Label htmlFor="batch-label">Label (optional)</Label>
               <Input
-                id="batch-received"
-                type="date"
-                required
-                value={receivedDate}
-                onChange={(e) => setReceivedDate(e.target.value)}
+                id="batch-label"
+                value={batchLabel}
+                onChange={(e) => setBatchLabel(e.target.value)}
+                placeholder="e.g. July batch"
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="batch-received">Received</Label>
+                <Input
+                  id="batch-received"
+                  type="date"
+                  required
+                  value={receivedDate}
+                  onChange={(e) => setReceivedDate(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="batch-expiry">Expiry</Label>
+                <Input
+                  id="batch-expiry"
+                  type="date"
+                  required
+                  value={expiryDate}
+                  onChange={(e) => {
+                    setExpiryDate(e.target.value);
+                    setWasteWarning(null);
+                  }}
+                />
+              </div>
+            </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="batch-expiry">Expiry</Label>
+              <Label htmlFor="batch-quantity">Quantity</Label>
               <Input
-                id="batch-expiry"
-                type="date"
+                id="batch-quantity"
+                type="number"
                 required
-                value={expiryDate}
+                min={0}
+                step="1"
+                value={quantityReceived}
                 onChange={(e) => {
-                  setExpiryDate(e.target.value);
+                  setQuantityReceived(e.target.value);
                   setWasteWarning(null);
                 }}
               />
             </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="batch-quantity">Quantity</Label>
-            <Input
-              id="batch-quantity"
-              type="number"
-              required
-              min={0}
-              step="any"
-              value={quantityReceived}
-              onChange={(e) => {
-                setQuantityReceived(e.target.value);
-                setWasteWarning(null);
-              }}
-            />
-          </div>
 
-          {error && <p className="text-destructive text-sm">{error}</p>}
+            {error && <p className="text-destructive text-sm">{error}</p>}
 
-          {wasteWarning && (
-            <div className="bg-warning/10 border-warning/30 flex flex-col gap-2 rounded-md border p-3 text-sm">
-              <div className="text-warning-foreground flex items-center gap-2 font-medium">
-                <TriangleAlert className="text-warning size-4 shrink-0" />
-                Projected to waste ~{wasteWarning.wastedQuantity.toFixed(1)} units before expiry
+            {wasteWarning && (
+              <div className="bg-warning/10 border-warning/30 flex flex-col gap-2 rounded-md border p-3 text-sm">
+                <div className="text-warning-foreground flex items-center gap-2 font-medium">
+                  <TriangleAlert className="text-warning size-4 shrink-0" />
+                  Projected to waste ~{ceilQty(wasteWarning.wastedQuantity)} units before expiry
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setWasteWarning(null)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={submitBatch}>
+                    Accept anyway
+                  </Button>
+                </div>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setWasteWarning(null)}>
-                  Cancel
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={submitBatch}>
-                  Accept anyway
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
 
-          {!wasteWarning && (
-            <DialogFooter>
-              <Button type="submit" disabled={evaluateCandidate.isPending || createBatch.isPending}>
-                Add batch
-              </Button>
-            </DialogFooter>
-          )}
-        </form>
+            {!wasteWarning && (
+              <DialogFooter>
+                <Button type="submit" disabled={evaluateCandidate.isPending || createBatch.isPending}>
+                  Add batch
+                </Button>
+              </DialogFooter>
+            )}
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

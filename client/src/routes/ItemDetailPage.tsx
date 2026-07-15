@@ -8,7 +8,7 @@ import { BatchList } from '../components/batches/BatchList';
 import { AcceptBatchDialog } from '../components/batches/AcceptBatchDialog';
 import { ProjectionChart } from '../components/projection/ProjectionChart';
 import { ExpiryWarningBanner } from '../components/projection/ExpiryWarningBanner';
-import { RequestNewerBatchCallout } from '../components/projection/RequestNewerBatchCallout';
+import { NextDeliveryRecommendationCallout } from '../components/projection/NextDeliveryRecommendationCallout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,7 +62,11 @@ export function ItemDetailPage() {
       {summary && (
         <div className="flex flex-col gap-3">
           <ExpiryWarningBanner summary={summary} />
-          <RequestNewerBatchCallout requestNewerExpiryFromDate={summary.requestNewerExpiryFromDate} />
+          <NextDeliveryRecommendationCallout
+            atRiskExpiryDate={summary.atRiskExpiryDate}
+            nextDeliveryRecommendedQuantity={summary.nextDeliveryRecommendedQuantity}
+            quantityPerDelivery={item.recurringSupplySchedule?.quantityPerDelivery ?? null}
+          />
         </div>
       )}
 
@@ -98,7 +102,11 @@ export function ItemDetailPage() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold tracking-tight">Batches</h2>
-          <AcceptBatchDialog itemId={item.id} hasConsumptionRate={Boolean(item.consumptionRate)} />
+          <AcceptBatchDialog
+            itemId={item.id}
+            hasConsumptionRate={Boolean(item.consumptionRate)}
+            quantityPerDelivery={item.recurringSupplySchedule?.quantityPerDelivery ?? null}
+          />
         </div>
         <BatchList itemId={item.id} batches={item.batches} />
       </div>

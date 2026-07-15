@@ -55,6 +55,23 @@ export function simulate(
   let previousSafeDeliveryDate: Date | null = null;
   let deliveryCounter = 0;
 
+  // Recommended quantity for a hypothetical next batch, computed from today's
+  // actual position — independent of whether a recurring supply schedule is
+  // configured. When one exists, its assumed expiry is the candidate expiry;
+  // otherwise fall back to the soonest-expiring active batch, since that's the
+  // expiry a new batch would need to avoid piling up behind.
+  const candidateExpiryForRecommendation = recurringSupply
+    ? toUTCMidnight(recurringSupply.assumedExpiryForFuture)
+    : [...activeBatches].sort((a, b) => a.expiryDate.getTime() - b.expiryDate.getTime())[0]?.expiryDate;
+  let nextDeliveryRecommendedQuantity: number | null = null;
+  if (candidateExpiryForRecommendation) {
+    const existingNeedingByE = activeBatches
+      .filter((b) => b.remaining > 0 && b.expiryDate <= candidateExpiryForRecommendation)
+      .reduce((sum, b) => sum + b.remaining, 0);
+    const consumableByE = sumConsumptionCapacity(consumptionRate, startDate, candidateExpiryForRecommendation);
+    nextDeliveryRecommendedQuantity = Math.max(0, consumableByE - existingNeedingByE);
+  }
+
   for (let offset = 0; offset <= options.horizonDays; offset++) {
     const day = addDays(startDate, offset);
 
@@ -134,5 +151,6 @@ export function simulate(
     expiryWasteEvents,
     lastAcceptableDateForCurrentExpiry,
     requestNewerExpiryFromDate,
+    nextDeliveryRecommendedQuantity,
   };
 }

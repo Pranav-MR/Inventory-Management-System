@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { roundQty } from '@/lib/format';
 import type { ConsumptionRate, PeriodUnit } from '../../types/item';
 
 const PERIOD_UNITS: PeriodUnit[] = ['DAY', 'WEEK', 'MONTH', 'YEAR'];
@@ -15,7 +16,7 @@ export function ConsumptionRateForm({ itemId, current }: { itemId: string; curre
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await setRate.mutateAsync({ ratePerPeriod: Number(ratePerPeriod), periodUnit });
+    await setRate.mutateAsync({ ratePerPeriod: roundQty(Number(ratePerPeriod)), periodUnit });
   }
 
   return (
@@ -29,7 +30,7 @@ export function ConsumptionRateForm({ itemId, current }: { itemId: string; curre
           type="number"
           required
           min={0}
-          step="any"
+          step="1"
           value={ratePerPeriod}
           onChange={(e) => setRatePerPeriod(e.target.value)}
           className="w-28 font-mono"

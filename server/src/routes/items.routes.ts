@@ -14,6 +14,7 @@ itemsRouter.post('/', asyncHandler(itemsController.create));
 itemsRouter.get('/:itemId', asyncHandler(itemsController.get));
 itemsRouter.patch('/:itemId', asyncHandler(itemsController.update));
 itemsRouter.delete('/:itemId', asyncHandler(itemsController.archive));
+itemsRouter.delete('/:itemId/permanent', asyncHandler(itemsController.remove));
 
 itemsRouter.put('/:itemId/consumption-rate', asyncHandler(itemsController.putConsumptionRate));
 itemsRouter.put('/:itemId/recurring-supply', asyncHandler(itemsController.putRecurringSupply));

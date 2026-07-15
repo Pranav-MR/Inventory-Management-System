@@ -64,6 +64,41 @@ describe('items CRUD', () => {
     expect(listAfterArchive.body).toHaveLength(0);
   });
 
+  it('permanently deletes an item and cascades its batches, rate, and recurring supply', async () => {
+    const { accessToken } = await getAuthedAgent();
+    const auth = (req: request.Test) => req.set('Authorization', `Bearer ${accessToken}`);
+
+    const createRes = await auth(
+      request(app).post('/api/items').send({ name: 'Medicine A', unit: 'tablet' }),
+    );
+    const itemId = createRes.body.id;
+
+    await auth(
+      request(app).put(`/api/items/${itemId}/consumption-rate`).send({ ratePerPeriod: 10, periodUnit: 'MONTH' }),
+    );
+    await auth(
+      request(app)
+        .post(`/api/items/${itemId}/batches`)
+        .send({
+          receivedDate: '2026-07-01T00:00:00.000Z',
+          expiryDate: '2027-12-31T00:00:00.000Z',
+          quantityReceived: 16,
+        }),
+    );
+
+    const deleteRes = await auth(request(app).delete(`/api/items/${itemId}/permanent`));
+    expect(deleteRes.status).toBe(204);
+
+    const getAfterDelete = await auth(request(app).get(`/api/items/${itemId}`));
+    expect(getAfterDelete.status).toBe(404);
+
+    const listAfterDelete = await auth(request(app).get('/api/items'));
+    expect(listAfterDelete.body).toHaveLength(0);
+
+    const batchCount = await prisma.batch.count({ where: { itemId } });
+    expect(batchCount).toBe(0);
+  });
+
   it('rejects access to another user\'s item with 404', async () => {
     const { accessToken } = await getAuthedAgent();
     const createRes = await request(app)
@@ -127,6 +162,63 @@ describe('items CRUD', () => {
 
     const getAfterDelete = await auth(request(app).get(`/api/items/${itemId}`));
     expect(getAfterDelete.body.recurringSupplySchedule).toBeNull();
+  });
+
+  it('deactivates and reactivates a recurring supply schedule without losing its values', async () => {
+    const { accessToken } = await getAuthedAgent();
+    const auth = (req: request.Test) => req.set('Authorization', `Bearer ${accessToken}`);
+
+    const createRes = await auth(
+      request(app).post('/api/items').send({ name: 'Medicine A', unit: 'tablet' }),
+    );
+    const itemId = createRes.body.id;
+
+    const createSupplyRes = await auth(
+      request(app)
+        .put(`/api/items/${itemId}/recurring-supply`)
+        .send({
+          intervalValue: 1,
+          intervalUnit: 'MONTH',
+          quantityPerDelivery: 16,
+          nextExpectedDeliveryDate: '2026-08-01T00:00:00.000Z',
+        }),
+    );
+    expect(createSupplyRes.status).toBe(200);
+    expect(createSupplyRes.body.isActive).toBe(true);
+
+    const deactivateRes = await auth(
+      request(app)
+        .put(`/api/items/${itemId}/recurring-supply`)
+        .send({
+          intervalValue: 1,
+          intervalUnit: 'MONTH',
+          quantityPerDelivery: 16,
+          nextExpectedDeliveryDate: '2026-08-01T00:00:00.000Z',
+          isActive: false,
+        }),
+    );
+    expect(deactivateRes.status).toBe(200);
+    expect(deactivateRes.body.isActive).toBe(false);
+    expect(deactivateRes.body.quantityPerDelivery).toBe(16);
+
+    const getAfterDeactivate = await auth(request(app).get(`/api/items/${itemId}`));
+    expect(getAfterDeactivate.body.recurringSupplySchedule.isActive).toBe(false);
+    expect(getAfterDeactivate.body.recurringSupplySchedule.quantityPerDelivery).toBe(16);
+
+    const reactivateRes = await auth(
+      request(app)
+        .put(`/api/items/${itemId}/recurring-supply`)
+        .send({
+          intervalValue: 1,
+          intervalUnit: 'MONTH',
+          quantityPerDelivery: 16,
+          nextExpectedDeliveryDate: '2026-08-01T00:00:00.000Z',
+          isActive: true,
+        }),
+    );
+    expect(reactivateRes.status).toBe(200);
+    expect(reactivateRes.body.isActive).toBe(true);
+    expect(reactivateRes.body.quantityPerDelivery).toBe(16);
   });
 });
 

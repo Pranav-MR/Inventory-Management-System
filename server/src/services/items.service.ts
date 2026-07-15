@@ -60,6 +60,11 @@ export async function archiveItem(userId: string, itemId: string) {
   await prisma.item.update({ where: { id: itemId }, data: { isArchived: true } });
 }
 
+export async function deleteItem(userId: string, itemId: string) {
+  await assertItemOwnership(userId, itemId);
+  await prisma.item.delete({ where: { id: itemId } });
+}
+
 export async function upsertConsumptionRate(
   userId: string,
   itemId: string,
@@ -82,13 +87,15 @@ export async function upsertRecurringSupply(
     quantityPerDelivery: number;
     nextExpectedDeliveryDate: Date;
     assumedExpiryForFuture?: Date | null;
+    isActive?: boolean;
   },
 ) {
   await assertItemOwnership(userId, itemId);
+  const { isActive = true, ...rest } = input;
   return prisma.recurringSupplySchedule.upsert({
     where: { itemId },
-    create: { itemId, ...input, isActive: true },
-    update: { ...input, isActive: true },
+    create: { itemId, ...rest, isActive },
+    update: { ...rest, isActive },
   });
 }
 

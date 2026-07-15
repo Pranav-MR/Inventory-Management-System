@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { roundQty } from '@/lib/format';
 import type { Batch, BatchStatus } from '../../types/item';
 
 const STATUS_VARIANT: Record<BatchStatus, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
@@ -28,7 +29,7 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
   async function saveQuantity() {
     const value = Number(quantity);
     if (!Number.isFinite(value) || value < 0) return;
-    await updateBatch.mutateAsync({ batchId: batch.id, input: { quantityRemaining: value } });
+    await updateBatch.mutateAsync({ batchId: batch.id, input: { quantityRemaining: roundQty(value) } });
     setEditing(false);
   }
 
@@ -39,14 +40,14 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
       <TableCell className={cn(isExpired ? 'text-destructive font-bold' : 'text-muted-foreground')}>
         {format(parseISO(batch.expiryDate), 'MMM d, yyyy')}
       </TableCell>
-      <TableCell className="text-muted-foreground font-mono">{batch.quantityReceived}</TableCell>
+      <TableCell className="text-muted-foreground font-mono">{roundQty(batch.quantityReceived)}</TableCell>
       <TableCell>
         {editing ? (
           <div className="flex items-center gap-1">
             <Input
               type="number"
               min={0}
-              step="any"
+              step="1"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               className="h-7 w-20"
@@ -65,7 +66,7 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
             onClick={() => setEditing(true)}
             className="hover:decoration-muted-foreground font-mono underline decoration-dotted underline-offset-4"
           >
-            {batch.quantityRemaining}
+            {roundQty(batch.quantityRemaining)}
           </button>
         )}
       </TableCell>

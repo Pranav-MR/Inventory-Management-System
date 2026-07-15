@@ -46,4 +46,5 @@ export interface SimulationResult {
   expiryWasteEvents: Array<{ batchId: string; wastedQuantity: number; date: Date }>;
   lastAcceptableDateForCurrentExpiry: Date | null;
   requestNewerExpiryFromDate: Date | null;
+  nextDeliveryRecommendedQuantity: number | null;
 }

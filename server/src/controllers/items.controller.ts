@@ -35,6 +35,7 @@ const recurringSupplySchema = z.object({
   quantityPerDelivery: z.number().positive(),
   nextExpectedDeliveryDate: z.coerce.date(),
   assumedExpiryForFuture: z.coerce.date().nullable().optional(),
+  isActive: z.boolean().optional().default(true),
 });
 
 function toItemDto(item: ItemWithRelations) {
@@ -59,6 +60,7 @@ function toItemDto(item: ItemWithRelations) {
           quantityPerDelivery: decimalToNumber(item.recurringSupplySchedule.quantityPerDelivery),
           nextExpectedDeliveryDate: item.recurringSupplySchedule.nextExpectedDeliveryDate,
           assumedExpiryForFuture: item.recurringSupplySchedule.assumedExpiryForFuture,
+          isActive: item.recurringSupplySchedule.isActive,
         }
       : null,
     batches: item.batches?.map((b) => ({
@@ -102,6 +104,11 @@ export async function archive(req: Request, res: Response) {
   res.status(204).send();
 }
 
+export async function remove(req: Request, res: Response) {
+  await itemsService.deleteItem(req.userId!, req.params.itemId);
+  res.status(204).send();
+}
+
 export async function putConsumptionRate(req: Request, res: Response) {
   const input = consumptionRateSchema.parse(req.body);
   const rate = await itemsService.upsertConsumptionRate(req.userId!, req.params.itemId, input);
@@ -117,6 +124,7 @@ export async function putRecurringSupply(req: Request, res: Response) {
     quantityPerDelivery: decimalToNumber(schedule.quantityPerDelivery),
     nextExpectedDeliveryDate: schedule.nextExpectedDeliveryDate,
     assumedExpiryForFuture: schedule.assumedExpiryForFuture,
+    isActive: schedule.isActive,
   });
 }
 

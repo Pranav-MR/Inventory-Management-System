@@ -40,6 +40,14 @@ export function useArchiveItem() {
   });
 }
 
+export function useDeleteItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) => apiClient.delete(`/items/${itemId}/permanent`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: itemsKey }),
+  });
+}
+
 export function useSetConsumptionRate(itemId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -58,6 +66,7 @@ export function useSetRecurringSupply(itemId: string) {
       quantityPerDelivery: number;
       nextExpectedDeliveryDate: string;
       assumedExpiryForFuture?: string | null;
+      isActive?: boolean;
     }) => apiClient.put(`/items/${itemId}/recurring-supply`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: itemKey(itemId) }),
   });

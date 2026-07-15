@@ -12,6 +12,7 @@ export interface RecurringSupplySchedule {
   quantityPerDelivery: number;
   nextExpectedDeliveryDate: string;
   assumedExpiryForFuture: string | null;
+  isActive: boolean;
 }
 
 export interface Batch {
