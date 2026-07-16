@@ -21,7 +21,7 @@ export function SignupPage() {
     setIsSubmitting(true);
     try {
       await signup(email, password, name || undefined);
-      navigate('/items');
+      navigate('/dashboard');
     } catch {
       setError('Could not create account. Email may already be in use.');
     } finally {

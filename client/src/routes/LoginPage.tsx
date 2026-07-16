@@ -20,7 +20,7 @@ export function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      navigate('/items');
+      navigate('/dashboard');
     } catch {
       setError('Invalid email or password.');
     } finally {

@@ -6,6 +6,7 @@ export function usePageTitle(): string {
 
   if (location.pathname === '/notifications') return 'Notifications';
   if (itemId) return 'Item details';
-  if (location.pathname.startsWith('/items')) return 'Dashboard';
+  if (location.pathname.startsWith('/items')) return 'Items';
+  if (location.pathname.startsWith('/dashboard')) return 'Dashboard';
   return 'Inventory';
 }
