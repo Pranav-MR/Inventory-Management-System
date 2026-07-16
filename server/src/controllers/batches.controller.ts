@@ -19,7 +19,9 @@ const evaluateCandidateSchema = z.object({
 
 const updateBatchSchema = z.object({
   batchLabel: z.string().min(1).nullable().optional(),
+  receivedDate: z.coerce.date().optional(),
   expiryDate: z.coerce.date().optional(),
+  quantityReceived: z.number().positive().optional(),
   quantityRemaining: z.number().min(0).optional(),
   status: z.enum(['ACTIVE', 'DEPLETED', 'EXPIRED', 'DISCARDED']).optional(),
 });

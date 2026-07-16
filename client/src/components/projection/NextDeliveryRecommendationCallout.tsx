@@ -13,14 +13,17 @@ export function describeNextDeliveryRecommendation(atRiskExpiryDate: string | nu
 export function NextDeliveryRecommendationCallout({
   atRiskExpiryDate,
   nextDeliveryRecommendedQuantity,
-  quantityPerDelivery,
+  normalPurchaseQuantity,
 }: {
   atRiskExpiryDate: string | null;
   nextDeliveryRecommendedQuantity: number | null;
-  quantityPerDelivery: number | null;
+  normalPurchaseQuantity: number | null;
 }) {
-  if (nextDeliveryRecommendedQuantity === null) return null;
-  if (quantityPerDelivery !== null && nextDeliveryRecommendedQuantity >= quantityPerDelivery) return null;
+  // Only worth surfacing when accepting the normal amount would actually cause
+  // a problem — either the next batch shouldn't be accepted at all (0), or the
+  // safe amount is less than what's normally ordered.
+  if (nextDeliveryRecommendedQuantity === null || normalPurchaseQuantity === null) return null;
+  if (nextDeliveryRecommendedQuantity >= normalPurchaseQuantity) return null;
 
   return (
     <div className="border-success/20 border-l-success bg-success/6 text-success flex items-center gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px] shadow-[0_0_24px_rgba(74,222,128,0.12)] backdrop-blur-lg">

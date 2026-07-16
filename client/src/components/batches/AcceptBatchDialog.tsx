@@ -6,6 +6,7 @@ import { projectionSummaryQueryOptions } from '../../api/projections';
 import { ceilQty, roundQty } from '@/lib/format';
 import { describeNextDeliveryRecommendation } from '../projection/NextDeliveryRecommendationCallout';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -20,11 +21,11 @@ import {
 export function AcceptBatchDialog({
   itemId,
   hasConsumptionRate,
-  quantityPerDelivery,
+  normalPurchaseQuantity,
 }: {
   itemId: string;
   hasConsumptionRate: boolean;
-  quantityPerDelivery: number | null;
+  normalPurchaseQuantity: number | null;
 }) {
   const queryClient = useQueryClient();
   const evaluateCandidate = useEvaluateCandidateBatch(itemId);
@@ -67,7 +68,11 @@ export function AcceptBatchDialog({
       try {
         const summary = await queryClient.fetchQuery(projectionSummaryQueryOptions(itemId));
         const recommendedQuantity = summary.nextDeliveryRecommendedQuantity;
-        if (recommendedQuantity !== null && (quantityPerDelivery === null || recommendedQuantity < quantityPerDelivery)) {
+        if (
+          recommendedQuantity !== null &&
+          normalPurchaseQuantity !== null &&
+          recommendedQuantity < normalPurchaseQuantity
+        ) {
           setDeliveryWarning({ atRiskExpiryDate: summary.atRiskExpiryDate, recommendedQuantity });
           return;
         }
@@ -160,23 +165,16 @@ export function AcceptBatchDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="batch-received">Received</Label>
-                <Input
-                  id="batch-received"
-                  type="date"
-                  required
-                  value={receivedDate}
-                  onChange={(e) => setReceivedDate(e.target.value)}
-                />
+                <DatePicker id="batch-received" mode="full" value={receivedDate} onChange={setReceivedDate} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="batch-expiry">Expiry</Label>
-                <Input
+                <DatePicker
                   id="batch-expiry"
-                  type="date"
-                  required
+                  mode="month"
                   value={expiryDate}
-                  onChange={(e) => {
-                    setExpiryDate(e.target.value);
+                  onChange={(next) => {
+                    setExpiryDate(next);
                     setWasteWarning(null);
                   }}
                 />

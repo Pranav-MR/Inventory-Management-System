@@ -9,6 +9,7 @@ import { AcceptBatchDialog } from '../components/batches/AcceptBatchDialog';
 import { ProjectionChart } from '../components/projection/ProjectionChart';
 import { ExpiryWarningBanner } from '../components/projection/ExpiryWarningBanner';
 import { NextDeliveryRecommendationCallout } from '../components/projection/NextDeliveryRecommendationCallout';
+import { getNormalPurchaseQuantity } from '@/lib/recommendation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,6 +37,8 @@ export function ItemDetailPage() {
     await archiveItem.mutateAsync(item!.id);
     navigate('/items');
   }
+
+  const normalPurchaseQuantity = getNormalPurchaseQuantity(item);
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,7 +68,7 @@ export function ItemDetailPage() {
           <NextDeliveryRecommendationCallout
             atRiskExpiryDate={summary.atRiskExpiryDate}
             nextDeliveryRecommendedQuantity={summary.nextDeliveryRecommendedQuantity}
-            quantityPerDelivery={item.recurringSupplySchedule?.quantityPerDelivery ?? null}
+            normalPurchaseQuantity={normalPurchaseQuantity}
           />
         </div>
       )}
@@ -105,7 +108,7 @@ export function ItemDetailPage() {
           <AcceptBatchDialog
             itemId={item.id}
             hasConsumptionRate={Boolean(item.consumptionRate)}
-            quantityPerDelivery={item.recurringSupplySchedule?.quantityPerDelivery ?? null}
+            normalPurchaseQuantity={normalPurchaseQuantity}
           />
         </div>
         <BatchList itemId={item.id} batches={item.batches} />

@@ -64,7 +64,7 @@ function ItemRow({ item }: { item: Item }) {
             <Button
               size="icon"
               variant="ghost"
-              className="text-muted-foreground hover:text-destructive size-7"
+              className="text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive size-7 border border-transparent"
               aria-label={`Delete ${item.name}`}
             >
               <Trash2 className="size-3.5" />

@@ -2,11 +2,21 @@ import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Check, Trash2, X } from 'lucide-react';
 import { useDeleteBatch, useUpdateBatch } from '../../api/batches';
+import { EditBatchDialog } from './EditBatchDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { roundQty } from '@/lib/format';
 import type { Batch, BatchStatus } from '../../types/item';
@@ -23,6 +33,7 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
   const deleteBatch = useDeleteBatch(itemId);
   const [editing, setEditing] = useState(false);
   const [quantity, setQuantity] = useState(String(batch.quantityRemaining));
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const isExpired = new Date(batch.expiryDate) < new Date();
 
@@ -31,6 +42,11 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
     if (!Number.isFinite(value) || value < 0) return;
     await updateBatch.mutateAsync({ batchId: batch.id, input: { quantityRemaining: roundQty(value) } });
     setEditing(false);
+  }
+
+  async function handleDelete() {
+    await deleteBatch.mutateAsync(batch.id);
+    setConfirmOpen(false);
   }
 
   return (
@@ -74,14 +90,44 @@ function BatchRow({ itemId, batch }: { itemId: string; batch: Batch }) {
         <Badge variant={STATUS_VARIANT[batch.status]}>{batch.status}</Badge>
       </TableCell>
       <TableCell>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="text-muted-foreground hover:text-destructive size-7"
-          onClick={() => deleteBatch.mutate(batch.id)}
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <EditBatchDialog itemId={itemId} batch={batch} />
+          <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive size-7 border border-transparent"
+                aria-label={`Delete ${batch.batchLabel ?? 'batch'}`}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete batch</DialogTitle>
+                <DialogDescription>
+                  This permanently deletes this batch
+                  {batch.batchLabel ? (
+                    <>
+                      {' '}
+                      (<strong className="font-semibold">{batch.batchLabel}</strong>)
+                    </>
+                  ) : null}{' '}
+                  and its stock history. This cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setConfirmOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleteBatch.isPending}>
+                  {deleteBatch.isPending ? 'Deleting…' : 'Delete'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </TableCell>
     </TableRow>
   );

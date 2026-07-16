@@ -261,4 +261,50 @@ describe('batches CRUD', () => {
     const listAfterDelete = await auth(request(app).get(`/api/items/${itemId}/batches`));
     expect(listAfterDelete.body).toHaveLength(0);
   });
+
+  it('edits a batch\'s core details and preserves already-consumed quantity when correcting quantityReceived', async () => {
+    const { accessToken } = await getAuthedAgent();
+    const auth = (req: request.Test) => req.set('Authorization', `Bearer ${accessToken}`);
+
+    const createItemRes = await auth(
+      request(app).post('/api/items').send({ name: 'Medicine A', unit: 'tablet' }),
+    );
+    const itemId = createItemRes.body.id;
+
+    const createBatchRes = await auth(
+      request(app)
+        .post(`/api/items/${itemId}/batches`)
+        .send({
+          receivedDate: '2026-07-01T00:00:00.000Z',
+          expiryDate: '2027-12-31T00:00:00.000Z',
+          quantityReceived: 16,
+        }),
+    );
+    const batchId = createBatchRes.body.id;
+
+    // Simulate 6 units already consumed (16 -> 10 remaining).
+    const consumeRes = await auth(
+      request(app).patch(`/api/items/${itemId}/batches/${batchId}`).send({ quantityRemaining: 10 }),
+    );
+    expect(consumeRes.status).toBe(200);
+
+    // Now correct a data-entry mistake: label, dates, and the originally-received
+    // quantity (16 -> 20). The 6 units already consumed should carry over, not reset.
+    const editRes = await auth(
+      request(app)
+        .patch(`/api/items/${itemId}/batches/${batchId}`)
+        .send({
+          batchLabel: 'July batch (corrected)',
+          receivedDate: '2026-07-02T00:00:00.000Z',
+          expiryDate: '2027-11-30T00:00:00.000Z',
+          quantityReceived: 20,
+        }),
+    );
+    expect(editRes.status).toBe(200);
+    expect(editRes.body.batchLabel).toBe('July batch (corrected)');
+    expect(editRes.body.receivedDate.slice(0, 10)).toBe('2026-07-02');
+    expect(editRes.body.expiryDate.slice(0, 10)).toBe('2027-11-30');
+    expect(editRes.body.quantityReceived).toBe(20);
+    expect(editRes.body.quantityRemaining).toBe(14);
+  });
 });

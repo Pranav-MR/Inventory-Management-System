@@ -21,7 +21,14 @@ export function useUpdateBatch(itemId: string) {
       input,
     }: {
       batchId: string;
-      input: Partial<{ batchLabel: string | null; expiryDate: string; quantityRemaining: number; status: BatchStatus }>;
+      input: Partial<{
+        batchLabel: string | null;
+        receivedDate: string;
+        expiryDate: string;
+        quantityReceived: number;
+        quantityRemaining: number;
+        status: BatchStatus;
+      }>;
     }) => apiClient.patch<Batch>(`/items/${itemId}/batches/${batchId}`, input).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: itemKey(itemId) }),
   });

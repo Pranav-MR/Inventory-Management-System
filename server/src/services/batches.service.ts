@@ -47,17 +47,30 @@ export async function updateBatch(
   batchId: string,
   input: {
     batchLabel?: string | null;
+    receivedDate?: Date;
     expiryDate?: Date;
+    quantityReceived?: number;
     quantityRemaining?: number;
     status?: BatchStatus;
   },
 ) {
-  await assertBatchOwnership(userId, itemId, batchId);
+  const existing = await assertBatchOwnership(userId, itemId, batchId);
+
+  // Editing the originally-received quantity is a data correction, not a
+  // consumption event — preserve however much has already been consumed
+  // rather than resetting remaining stock back up to the new total.
+  let { quantityRemaining } = input;
+  if (input.quantityReceived != null && quantityRemaining == null) {
+    const consumedSoFar = Number(existing.quantityReceived) - Number(existing.quantityRemaining);
+    quantityRemaining = Math.max(0, input.quantityReceived - consumedSoFar);
+  }
+
   return prisma.batch.update({
     where: { id: batchId },
     data: {
       ...input,
-      ...(input.quantityRemaining != null ? { quantityAsOfDate: new Date() } : {}),
+      ...(quantityRemaining != null ? { quantityRemaining } : {}),
+      ...(input.quantityReceived != null || quantityRemaining != null ? { quantityAsOfDate: new Date() } : {}),
     },
   });
 }
