@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js';
 import { NotFoundError } from '../lib/errors.js';
+import { logActivity } from './activity.service.js';
 import type { PeriodUnit } from '@prisma/client';
 
 export async function assertItemOwnership(userId: string, itemId: string) {
@@ -30,7 +31,7 @@ export async function createItem(
   userId: string,
   input: { name: string; unit: string; category?: string; lowStockThreshold?: number },
 ) {
-  return prisma.item.create({
+  const item = await prisma.item.create({
     data: {
       userId,
       name: input.name,
@@ -40,6 +41,14 @@ export async function createItem(
     },
     include: { consumptionRate: true, recurringSupplySchedule: true, batches: true },
   });
+  await logActivity({
+    userId,
+    itemId: item.id,
+    itemName: item.name,
+    type: 'ITEM_ADDED',
+    message: `Added item "${item.name}"`,
+  });
+  return item;
 }
 
 export async function updateItem(
@@ -48,21 +57,43 @@ export async function updateItem(
   input: { name?: string; unit?: string; category?: string | null; lowStockThreshold?: number | null },
 ) {
   await assertItemOwnership(userId, itemId);
-  return prisma.item.update({
+  const item = await prisma.item.update({
     where: { id: itemId },
     data: input,
     include: { consumptionRate: true, recurringSupplySchedule: true, batches: true },
   });
+  await logActivity({
+    userId,
+    itemId: item.id,
+    itemName: item.name,
+    type: 'ITEM_EDITED',
+    message: `Edited item "${item.name}"`,
+  });
+  return item;
 }
 
 export async function archiveItem(userId: string, itemId: string) {
-  await assertItemOwnership(userId, itemId);
+  const existing = await assertItemOwnership(userId, itemId);
   await prisma.item.update({ where: { id: itemId }, data: { isArchived: true } });
+  await logActivity({
+    userId,
+    itemId,
+    itemName: existing.name,
+    type: 'ITEM_ARCHIVED',
+    message: `Archived item "${existing.name}"`,
+  });
 }
 
 export async function deleteItem(userId: string, itemId: string) {
-  await assertItemOwnership(userId, itemId);
+  const existing = await assertItemOwnership(userId, itemId);
   await prisma.item.delete({ where: { id: itemId } });
+  await logActivity({
+    userId,
+    itemId: null,
+    itemName: existing.name,
+    type: 'ITEM_DELETED',
+    message: `Deleted item "${existing.name}"`,
+  });
 }
 
 export async function upsertConsumptionRate(

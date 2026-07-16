@@ -1,9 +1,10 @@
 import type { ComponentType } from 'react';
+import { Link } from 'react-router-dom';
 import { AlertTriangle, CalendarClock, PackageSearch, Boxes } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useDashboardSummary } from '../../api/dashboard';
+import { useDashboardOverview } from '../../api/dashboard';
 
 function Stat({
   label,
@@ -12,6 +13,7 @@ function Stat({
   iconGradient,
   iconGlow,
   criticalWhenPositive,
+  to,
 }: {
   label: string;
   value: number;
@@ -19,14 +21,16 @@ function Stat({
   iconGradient: string;
   iconGlow: string;
   criticalWhenPositive?: boolean;
+  to?: string;
 }) {
   const active = criticalWhenPositive && value > 0;
 
-  return (
+  const card = (
     <Card
       className={cn(
-        active &&
-          'border-destructive/30 shadow-[0_8px_32px_rgba(249,115,22,0.15),0_0_26px_rgba(249,115,22,0.2)]',
+        'transition-transform',
+        to && 'hover:scale-[1.02] cursor-pointer',
+        active && 'border-destructive/30 shadow-[0_8px_32px_rgba(249,115,22,0.15),0_0_26px_rgba(249,115,22,0.2)]',
       )}
     >
       <CardContent className="px-5 py-4">
@@ -41,6 +45,14 @@ function Stat({
       </CardContent>
     </Card>
   );
+
+  return to ? (
+    <Link to={to} className="block">
+      {card}
+    </Link>
+  ) : (
+    card
+  );
 }
 
 const GRADIENTS: Record<string, { bg: string; glow: string }> = {
@@ -51,7 +63,7 @@ const GRADIENTS: Record<string, { bg: string; glow: string }> = {
 };
 
 export function DashboardSummaryCards() {
-  const { data: summary, isLoading } = useDashboardSummary();
+  const { data: overview, isLoading } = useDashboardOverview();
 
   if (isLoading) {
     return (
@@ -63,7 +75,8 @@ export function DashboardSummaryCards() {
     );
   }
 
-  if (!summary) return null;
+  if (!overview) return null;
+  const { summary } = overview;
 
   return (
     <div className="grid grid-cols-2 gap-3.5 md:grid-cols-4">
@@ -73,6 +86,7 @@ export function DashboardSummaryCards() {
         icon={Boxes}
         iconGradient={GRADIENTS.greenCyan.bg}
         iconGlow={GRADIENTS.greenCyan.glow}
+        to="/items"
       />
       <Stat
         label="Low stock"
@@ -80,6 +94,7 @@ export function DashboardSummaryCards() {
         icon={PackageSearch}
         iconGradient={GRADIENTS.purple.bg}
         iconGlow={GRADIENTS.purple.glow}
+        to="/items?filter=low-stock"
       />
       <Stat
         label="Expiring soon"
@@ -87,6 +102,7 @@ export function DashboardSummaryCards() {
         icon={CalendarClock}
         iconGradient={GRADIENTS.amber.bg}
         iconGlow={GRADIENTS.amber.glow}
+        to="/items?filter=expiring-soon"
       />
       <Stat
         label="Needs action"
@@ -95,8 +111,8 @@ export function DashboardSummaryCards() {
         iconGradient={GRADIENTS.orangeGreen.bg}
         iconGlow={GRADIENTS.orangeGreen.glow}
         criticalWhenPositive
+        to="/items?filter=needs-action"
       />
     </div>
   );
 }
-

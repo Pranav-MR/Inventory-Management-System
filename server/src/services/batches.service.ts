@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js';
 import { NotFoundError } from '../lib/errors.js';
 import { assertItemOwnership } from './items.service.js';
+import { logActivity } from './activity.service.js';
 import type { BatchStatus } from '@prisma/client';
 
 export async function listBatches(userId: string, itemId: string) {
@@ -18,8 +19,8 @@ export async function createBatch(
     quantityReceived: number;
   },
 ) {
-  await assertItemOwnership(userId, itemId);
-  return prisma.batch.create({
+  const item = await assertItemOwnership(userId, itemId);
+  const batch = await prisma.batch.create({
     data: {
       itemId,
       batchLabel: input.batchLabel,
@@ -30,15 +31,23 @@ export async function createBatch(
       quantityAsOfDate: input.receivedDate,
     },
   });
+  await logActivity({
+    userId,
+    itemId,
+    itemName: item.name,
+    type: 'BATCH_ADDED',
+    message: `Added a batch of ${input.quantityReceived} ${item.unit} to "${item.name}"`,
+  });
+  return batch;
 }
 
 async function assertBatchOwnership(userId: string, itemId: string, batchId: string) {
-  await assertItemOwnership(userId, itemId);
+  const item = await assertItemOwnership(userId, itemId);
   const batch = await prisma.batch.findUnique({ where: { id: batchId } });
   if (!batch || batch.itemId !== itemId) {
     throw new NotFoundError('Batch not found');
   }
-  return batch;
+  return { item, batch };
 }
 
 export async function updateBatch(
@@ -54,7 +63,7 @@ export async function updateBatch(
     status?: BatchStatus;
   },
 ) {
-  const existing = await assertBatchOwnership(userId, itemId, batchId);
+  const { item, batch: existing } = await assertBatchOwnership(userId, itemId, batchId);
 
   // Editing the originally-received quantity is a data correction, not a
   // consumption event — preserve however much has already been consumed
@@ -65,7 +74,7 @@ export async function updateBatch(
     quantityRemaining = Math.max(0, input.quantityReceived - consumedSoFar);
   }
 
-  return prisma.batch.update({
+  const batch = await prisma.batch.update({
     where: { id: batchId },
     data: {
       ...input,
@@ -73,9 +82,38 @@ export async function updateBatch(
       ...(input.quantityReceived != null || quantityRemaining != null ? { quantityAsOfDate: new Date() } : {}),
     },
   });
+
+  // A quantityReceived edit is a data correction to the batch's core details;
+  // a quantityRemaining-only edit (the inline table editor) is consumption tracking.
+  if (input.quantityReceived != null) {
+    await logActivity({
+      userId,
+      itemId,
+      itemName: item.name,
+      type: 'BATCH_EDITED',
+      message: `Edited a batch of "${item.name}"`,
+    });
+  } else if (input.quantityRemaining != null) {
+    await logActivity({
+      userId,
+      itemId,
+      itemName: item.name,
+      type: 'CONSUMPTION_RECORDED',
+      message: `Recorded consumption for "${item.name}" — ${input.quantityRemaining} ${item.unit} remaining`,
+    });
+  }
+
+  return batch;
 }
 
 export async function deleteBatch(userId: string, itemId: string, batchId: string) {
-  await assertBatchOwnership(userId, itemId, batchId);
+  const { item } = await assertBatchOwnership(userId, itemId, batchId);
   await prisma.batch.delete({ where: { id: batchId } });
+  await logActivity({
+    userId,
+    itemId,
+    itemName: item.name,
+    type: 'BATCH_DELETED',
+    message: `Deleted a batch from "${item.name}"`,
+  });
 }

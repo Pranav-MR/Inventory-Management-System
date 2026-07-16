@@ -36,6 +36,17 @@ enum NotificationEventType {
   UPCOMING_DELIVERY_REMINDER
 }
 
+enum ActivityType {
+  ITEM_ADDED
+  ITEM_EDITED
+  ITEM_ARCHIVED
+  ITEM_DELETED
+  BATCH_ADDED
+  BATCH_EDITED
+  BATCH_DELETED
+  CONSUMPTION_RECORDED
+}
+
 model User {
   id                String                    @id @default(cuid())
   email             String                    @unique
@@ -47,6 +58,7 @@ model User {
   items             Item[]
   notificationPrefs NotificationPreference[]
   notificationLogs  NotificationLog[]
+  activityLogs      ActivityLog[]
   refreshTokens     RefreshToken[]
 }
 
@@ -77,6 +89,7 @@ model Item {
   recurringSupplySchedule RecurringSupplySchedule?
   batches                 Batch[]
   notificationLogs        NotificationLog[]
+  activityLogs            ActivityLog[]
 
   @@index([userId])
 }
@@ -151,4 +164,18 @@ model NotificationLog {
   createdAt DateTime                @default(now())
 
   @@index([userId, itemId])
+}
+
+model ActivityLog {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    String?
+  item      Item?        @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  itemName  String
+  type      ActivityType
+  message   String
+  createdAt DateTime     @default(now())
+
+  @@index([userId, createdAt])
 }
