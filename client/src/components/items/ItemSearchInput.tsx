@@ -20,7 +20,7 @@ export function ItemSearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search items by name…"
         aria-label="Search items"
-        className="pr-9 pl-9"
+        className="bg-popover border-border/80 focus-visible:border-primary/60 pr-9 pl-9 shadow-[0_2px_12px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:shadow-[0_2px_16px_rgba(0,0,0,0.4)]"
       />
       {value && (
         <button
