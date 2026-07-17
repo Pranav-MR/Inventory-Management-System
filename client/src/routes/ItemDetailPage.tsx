@@ -2,7 +2,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Archive } from 'lucide-react';
 import { useArchiveItem, useItem } from '../api/items';
 import { useProjection, useProjectionSummary } from '../api/projections';
+import { useConsumptionRateHistory } from '../api/consumption';
 import { ConsumptionRateForm } from '../components/items/ConsumptionRateForm';
+import { AverageConsumptionChart } from '../components/items/AverageConsumptionChart';
+import { ConsumptionLogSection } from '../components/items/ConsumptionLogSection';
 import { RecurringSupplyForm } from '../components/items/RecurringSupplyForm';
 import { BatchList } from '../components/batches/BatchList';
 import { AcceptBatchDialog } from '../components/batches/AcceptBatchDialog';
@@ -22,6 +25,7 @@ export function ItemDetailPage() {
 
   const { data: summary } = useProjectionSummary(itemId!);
   const { data: projection } = useProjection(itemId!, 365);
+  const { data: rateHistory } = useConsumptionRateHistory(itemId!);
 
   if (isLoading || !item) {
     return (
@@ -77,8 +81,14 @@ export function ItemDetailPage() {
         <CardHeader>
           <CardTitle>Consumption rate</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-5">
           <ConsumptionRateForm itemId={item.id} current={item.consumptionRate} />
+          <div>
+            <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+              Average consumption over time
+            </h3>
+            <AverageConsumptionChart history={rateHistory ?? []} />
+          </div>
         </CardContent>
       </Card>
 
@@ -113,6 +123,8 @@ export function ItemDetailPage() {
         </div>
         <BatchList itemId={item.id} batches={item.batches} />
       </div>
+
+      <ConsumptionLogSection itemId={item.id} />
     </div>
   );
 }

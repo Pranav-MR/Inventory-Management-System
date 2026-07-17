@@ -102,11 +102,22 @@ export async function upsertConsumptionRate(
   input: { ratePerPeriod: number; periodUnit: PeriodUnit },
 ) {
   await assertItemOwnership(userId, itemId);
-  return prisma.consumptionRate.upsert({
+  const rate = await prisma.consumptionRate.upsert({
     where: { itemId },
     create: { itemId, ratePerPeriod: input.ratePerPeriod, periodUnit: input.periodUnit },
     update: { ratePerPeriod: input.ratePerPeriod, periodUnit: input.periodUnit },
   });
+  // Append-only audit trail for the "Average Consumption" chart — the engine
+  // never reads this, only the ConsumptionRate row above.
+  await prisma.consumptionRateHistory.create({
+    data: { itemId, ratePerPeriod: input.ratePerPeriod, periodUnit: input.periodUnit },
+  });
+  return rate;
+}
+
+export async function getConsumptionRateHistory(userId: string, itemId: string) {
+  await assertItemOwnership(userId, itemId);
+  return prisma.consumptionRateHistory.findMany({ where: { itemId }, orderBy: { effectiveFrom: 'asc' } });
 }
 
 export async function upsertRecurringSupply(

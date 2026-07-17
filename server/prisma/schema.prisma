@@ -90,6 +90,8 @@ model Item {
   batches                 Batch[]
   notificationLogs        NotificationLog[]
   activityLogs            ActivityLog[]
+  consumptionEntries      ConsumptionEntry[]
+  consumptionRateHistory  ConsumptionRateHistory[]
 
   @@index([userId])
 }
@@ -101,6 +103,20 @@ model ConsumptionRate {
   ratePerPeriod Decimal    @db.Decimal(10, 3)
   periodUnit    PeriodUnit
   updatedAt     DateTime   @updatedAt
+}
+
+/// Append-only history of every ConsumptionRate value the item has ever had,
+/// purely for the "Average Consumption" chart — the live ConsumptionRate row
+/// above remains the only value the prediction engine ever reads.
+model ConsumptionRateHistory {
+  id            String     @id @default(cuid())
+  itemId        String
+  item          Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  ratePerPeriod Decimal    @db.Decimal(10, 3)
+  periodUnit    PeriodUnit
+  effectiveFrom DateTime   @default(now())
+
+  @@index([itemId, effectiveFrom])
 }
 
 model RecurringSupplySchedule {
@@ -118,20 +134,52 @@ model RecurringSupplySchedule {
 }
 
 model Batch {
-  id                String      @id @default(cuid())
-  itemId            String
-  item              Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  batchLabel        String?
-  receivedDate      DateTime
-  expiryDate        DateTime
-  quantityReceived  Decimal     @db.Decimal(10, 3)
-  quantityRemaining Decimal     @db.Decimal(10, 3)
-  quantityAsOfDate  DateTime    @default(now())
-  status            BatchStatus @default(ACTIVE)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id                     String                   @id @default(cuid())
+  itemId                 String
+  item                   Item                     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  batchLabel             String?
+  receivedDate           DateTime
+  expiryDate             DateTime
+  quantityReceived       Decimal                  @db.Decimal(10, 3)
+  quantityRemaining      Decimal                  @db.Decimal(10, 3)
+  quantityAsOfDate       DateTime                 @default(now())
+  status                 BatchStatus              @default(ACTIVE)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  consumptionAllocations ConsumptionAllocation[]
 
   @@index([itemId, expiryDate])
+}
+
+/// A single logged real-world consumption event. Never read by the prediction
+/// engine — it exists purely for history/analytics and to keep batch
+/// quantities accurate; see ConsumptionAllocation for how it maps to batches.
+model ConsumptionEntry {
+  id          String                   @id @default(cuid())
+  itemId      String
+  item        Item                     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  date        DateTime
+  quantity    Decimal                  @db.Decimal(10, 3)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  allocations ConsumptionAllocation[]
+
+  @@index([itemId, date])
+}
+
+/// Records exactly which batch(es) a ConsumptionEntry's FIFO deduction drew
+/// from, and how much — so editing or deleting the entry can precisely
+/// reverse its effect instead of re-deriving batch quantities from scratch.
+model ConsumptionAllocation {
+  id                 String           @id @default(cuid())
+  consumptionEntryId String
+  consumptionEntry   ConsumptionEntry @relation(fields: [consumptionEntryId], references: [id], onDelete: Cascade)
+  batchId            String
+  batch              Batch            @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  quantity           Decimal          @db.Decimal(10, 3)
+
+  @@index([consumptionEntryId])
+  @@index([batchId])
 }
 
 model NotificationPreference {

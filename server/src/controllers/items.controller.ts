@@ -115,6 +115,18 @@ export async function putConsumptionRate(req: Request, res: Response) {
   res.json({ ratePerPeriod: decimalToNumber(rate.ratePerPeriod), periodUnit: rate.periodUnit });
 }
 
+export async function getConsumptionRateHistory(req: Request, res: Response) {
+  const history = await itemsService.getConsumptionRateHistory(req.userId!, req.params.itemId);
+  res.json(
+    history.map((h) => ({
+      id: h.id,
+      ratePerPeriod: decimalToNumber(h.ratePerPeriod),
+      periodUnit: h.periodUnit,
+      effectiveFrom: h.effectiveFrom,
+    })),
+  );
+}
+
 export async function putRecurringSupply(req: Request, res: Response) {
   const input = recurringSupplySchema.parse(req.body);
   const schedule = await itemsService.upsertRecurringSupply(req.userId!, req.params.itemId, input);
