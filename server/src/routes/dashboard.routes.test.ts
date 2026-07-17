@@ -134,8 +134,8 @@ describe('dashboard overview', () => {
     );
     expect(res.body.filterItemIds.lowStock).toEqual([lowStockItem.body.id]);
 
-    // Recent activity: capped at 8, most-recent-first, and the very last action (archiving) leads.
-    expect(res.body.recentActivity.length).toBeLessThanOrEqual(8);
+    // Recent activity: capped at 50, most-recent-first, and the very last action (archiving) leads.
+    expect(res.body.recentActivity.length).toBe(9);
     expect(res.body.recentActivity[0].type).toBe('ITEM_ARCHIVED');
     expect(res.body.recentActivity[0].itemName).toBe('Archived Item');
     const timestamps = res.body.recentActivity.map((a: { createdAt: string }) => new Date(a.createdAt).getTime());

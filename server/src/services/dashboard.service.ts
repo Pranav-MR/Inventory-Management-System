@@ -12,8 +12,9 @@ export interface DashboardSummary {
 
 const LOW_STOCK_DAYS_THRESHOLD = 14;
 const EXPIRING_SOON_DAYS_THRESHOLD = 30;
-const RECENT_ACTIVITY_LIMIT = 8;
-const UPCOMING_RECURRING_LIMIT = 8;
+// The dashboard widget only ever previews a handful of rows (client-side); this
+// is the cap for the "complete history" the View More modal scrolls through.
+const RECENT_ACTIVITY_LIMIT = 50;
 
 type ExpiringSoonGroup = 'TODAY' | 'TOMORROW' | 'THIS_WEEK' | 'LATER';
 
@@ -173,7 +174,7 @@ export async function getDashboardOverview(userId: string): Promise<DashboardOve
     },
     expiringSoon,
     lowStock,
-    upcomingRecurring: upcomingRecurring.slice(0, UPCOMING_RECURRING_LIMIT),
+    upcomingRecurring,
     recentActivity,
     overview: {
       totalBatches,
