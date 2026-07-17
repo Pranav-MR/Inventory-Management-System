@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ceilQty } from '@/lib/format';
 import { DashboardListModal } from './DashboardListModal';
-import { ViewMoreButton } from './ViewMoreButton';
+import { StatChip } from './StatChip';
+import { SummaryCardShell } from './SummaryCardShell';
 import type { ExpiringSoonEntry, ExpiringSoonGroup } from '../../api/dashboard';
 
 const GROUP_LABELS: Record<ExpiringSoonGroup, string> = {
@@ -24,8 +24,6 @@ const GROUP_BADGE_VARIANT: Record<ExpiringSoonGroup, 'destructive' | 'warning' |
   LATER: 'secondary',
 };
 
-const PREVIEW_COUNT = 8;
-
 // `entries` arrives already sorted earliest-expiry-first; filtering into groups
 // preserves that order, so no re-sort is needed within each group.
 function groupEntries(entries: ExpiringSoonEntry[]) {
@@ -36,6 +34,9 @@ function groupEntries(entries: ExpiringSoonEntry[]) {
 }
 
 function ExpiringSoonList({ entries }: { entries: ExpiringSoonEntry[] }) {
+  if (entries.length === 0) {
+    return <p className="text-muted-foreground text-sm">Nothing expiring in the next 30 days.</p>;
+  }
   const grouped = groupEntries(entries);
   return (
     <div className="flex flex-col gap-3">
@@ -65,33 +66,40 @@ function ExpiringSoonList({ entries }: { entries: ExpiringSoonEntry[] }) {
 
 export function ExpiringSoonSection({ entries }: { entries: ExpiringSoonEntry[] }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const preview = entries.slice(0, PREVIEW_COUNT);
-  const remaining = entries.length - PREVIEW_COUNT;
+
+  const todayCount = entries.filter((e) => e.group === 'TODAY').length;
+  const thisWeekCount = entries.filter((e) => e.group === 'TOMORROW' || e.group === 'THIS_WEEK').length;
+  const laterCount = entries.filter((e) => e.group === 'LATER').length;
+  const next = entries[0];
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <CalendarClock className="size-4" />
-          Expiring soon
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col">
-        <div className="h-[360px] overflow-y-auto">
-          {entries.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              Nothing expiring in the next 30 days.
-            </div>
+    <>
+      <SummaryCardShell icon={CalendarClock} title="Expiring soon" onClick={() => setModalOpen(true)}>
+        <div className="flex gap-2">
+          <StatChip label="Today" value={todayCount} tone="destructive" />
+          <StatChip label="This week" value={thisWeekCount} tone="warning" />
+          <StatChip label="Later" value={laterCount} tone="secondary" />
+        </div>
+        <div className="border-t pt-3">
+          {next ? (
+            <>
+              <div className="text-muted-foreground mb-1 text-xs">Next to expire</div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-semibold">{next.itemName}</span>
+                <span className="text-muted-foreground shrink-0 text-xs">
+                  {next.daysRemaining === 0 ? 'today' : `${next.daysRemaining}d`}
+                </span>
+              </div>
+            </>
           ) : (
-            <ExpiringSoonList entries={preview} />
+            <div className="text-muted-foreground text-sm">Nothing expiring soon.</div>
           )}
         </div>
-        {remaining > 0 && <ViewMoreButton remaining={remaining} onClick={() => setModalOpen(true)} />}
-      </CardContent>
+      </SummaryCardShell>
 
       <DashboardListModal open={modalOpen} onOpenChange={setModalOpen} title="Expiring Soon">
         <ExpiringSoonList entries={entries} />
       </DashboardListModal>
-    </Card>
+    </>
   );
 }

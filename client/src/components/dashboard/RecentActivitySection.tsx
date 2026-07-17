@@ -1,10 +1,9 @@
-import { useState, type ComponentType, type ReactNode } from 'react';
+import { useState, type ComponentType } from 'react';
 import { Link } from 'react-router-dom';
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import { formatDistanceToNow, isSameDay, parseISO } from 'date-fns';
 import { Activity, Archive, PackageMinus, PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardListModal } from './DashboardListModal';
-import { ViewMoreButton } from './ViewMoreButton';
+import { SummaryCardShell } from './SummaryCardShell';
 import type { ActivityEntry, ActivityType } from '../../api/dashboard';
 
 const ACTIVITY_ICON: Record<ActivityType, ComponentType<{ className?: string }>> = {
@@ -17,8 +16,6 @@ const ACTIVITY_ICON: Record<ActivityType, ComponentType<{ className?: string }>>
   BATCH_DELETED: PackageMinus,
   CONSUMPTION_RECORDED: PackageMinus,
 };
-
-const PREVIEW_COUNT = 5;
 
 function ActivityRow({ entry }: { entry: ActivityEntry }) {
   const Icon = ACTIVITY_ICON[entry.type];
@@ -46,6 +43,9 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
 }
 
 function ActivityList({ entries }: { entries: ActivityEntry[] }) {
+  if (entries.length === 0) {
+    return <p className="text-muted-foreground text-sm">No activity yet.</p>;
+  }
   return (
     <div className="flex flex-col gap-1">
       {entries.map((entry) => (
@@ -55,33 +55,41 @@ function ActivityList({ entries }: { entries: ActivityEntry[] }) {
   );
 }
 
-function EmptyState({ children }: { children: ReactNode }) {
-  return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{children}</div>;
-}
-
 export function RecentActivitySection({ entries }: { entries: ActivityEntry[] }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const preview = entries.slice(0, PREVIEW_COUNT);
-  const remaining = entries.length - PREVIEW_COUNT;
+
+  const todayCount = entries.filter((e) => isSameDay(parseISO(e.createdAt), new Date())).length;
+  const latest = entries[0];
+  const LatestIcon = latest ? ACTIVITY_ICON[latest.type] : null;
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Activity className="size-4" />
-          Recent activity
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col">
-        <div className="h-[280px] overflow-y-auto">
-          {entries.length === 0 ? <EmptyState>No activity yet.</EmptyState> : <ActivityList entries={preview} />}
+    <>
+      <SummaryCardShell icon={Activity} title="Recent activity" onClick={() => setModalOpen(true)}>
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-3xl leading-none font-bold tabular-nums">{todayCount}</span>
+          <span className="text-muted-foreground text-sm">{todayCount === 1 ? 'activity today' : 'activities today'}</span>
         </div>
-        {remaining > 0 && <ViewMoreButton remaining={remaining} onClick={() => setModalOpen(true)} />}
-      </CardContent>
+        <div className="border-t pt-3">
+          {latest && LatestIcon ? (
+            <>
+              <div className="text-muted-foreground mb-1 text-xs">Latest</div>
+              <div className="flex items-center gap-2">
+                <LatestIcon className="text-muted-foreground size-3.5 shrink-0" />
+                <span className="flex-1 truncate font-semibold">{latest.message}</span>
+                <span className="text-muted-foreground shrink-0 text-xs">
+                  {formatDistanceToNow(parseISO(latest.createdAt), { addSuffix: true })}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="text-muted-foreground text-sm">No activity yet.</div>
+          )}
+        </div>
+      </SummaryCardShell>
 
       <DashboardListModal open={modalOpen} onOpenChange={setModalOpen} title="Recent Activity">
         <ActivityList entries={entries} />
       </DashboardListModal>
-    </Card>
+    </>
   );
 }

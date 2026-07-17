@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PackageSearch } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { roundQty } from '@/lib/format';
 import { DashboardListModal } from './DashboardListModal';
-import { ViewMoreButton } from './ViewMoreButton';
+import { StatChip } from './StatChip';
+import { SummaryCardShell } from './SummaryCardShell';
 import type { LowStockEntry } from '../../api/dashboard';
 
-const PREVIEW_COUNT = 5;
+const CRITICAL_DAYS_THRESHOLD = 3;
 
 function LowStockList({ entries }: { entries: LowStockEntry[] }) {
+  if (entries.length === 0) {
+    return <p className="text-muted-foreground text-sm">Nothing is running low right now.</p>;
+  }
   return (
     <div className="flex flex-col gap-1">
       {entries.map((entry) => (
@@ -30,33 +33,38 @@ function LowStockList({ entries }: { entries: LowStockEntry[] }) {
 
 export function LowStockSection({ entries }: { entries: LowStockEntry[] }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const preview = entries.slice(0, PREVIEW_COUNT);
-  const remaining = entries.length - PREVIEW_COUNT;
+
+  const criticalCount = entries.filter((e) => e.daysOfStockRemaining <= CRITICAL_DAYS_THRESHOLD).length;
+  const lowCount = entries.length - criticalCount;
+  const mostCritical = entries[0];
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <PackageSearch className="size-4" />
-          Low stock
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col">
-        <div className="h-[280px] overflow-y-auto">
-          {entries.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              Nothing is running low right now.
-            </div>
+    <>
+      <SummaryCardShell icon={PackageSearch} title="Low stock" onClick={() => setModalOpen(true)}>
+        <div className="flex gap-2">
+          <StatChip label="Critical" value={criticalCount} tone="destructive" />
+          <StatChip label="Low stock" value={lowCount} tone="warning" />
+        </div>
+        <div className="border-t pt-3">
+          {mostCritical ? (
+            <>
+              <div className="text-muted-foreground mb-1 text-xs">Most critical</div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-semibold">{mostCritical.itemName}</span>
+                <span className="text-muted-foreground shrink-0 text-xs">
+                  {roundQty(mostCritical.currentQuantity)} {mostCritical.unit} · ~{mostCritical.daysOfStockRemaining}d
+                </span>
+              </div>
+            </>
           ) : (
-            <LowStockList entries={preview} />
+            <div className="text-muted-foreground text-sm">Nothing is running low right now.</div>
           )}
         </div>
-        {remaining > 0 && <ViewMoreButton remaining={remaining} onClick={() => setModalOpen(true)} />}
-      </CardContent>
+      </SummaryCardShell>
 
       <DashboardListModal open={modalOpen} onOpenChange={setModalOpen} title="Low Stock">
         <LowStockList entries={entries} />
       </DashboardListModal>
-    </Card>
+    </>
   );
 }

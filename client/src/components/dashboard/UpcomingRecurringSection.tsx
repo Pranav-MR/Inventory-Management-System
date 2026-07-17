@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { roundQty } from '@/lib/format';
 import { DashboardListModal } from './DashboardListModal';
-import { ViewMoreButton } from './ViewMoreButton';
+import { StatChip } from './StatChip';
+import { SummaryCardShell } from './SummaryCardShell';
 import type { UpcomingRecurringEntry } from '../../api/dashboard';
 
-const PREVIEW_COUNT = 5;
-
 function UpcomingRecurringList({ entries }: { entries: UpcomingRecurringEntry[] }) {
+  if (entries.length === 0) {
+    return <p className="text-muted-foreground text-sm">No recurring deliveries scheduled.</p>;
+  }
   return (
     <div className="flex flex-col gap-1">
       {entries.map((entry) => (
@@ -31,33 +32,36 @@ function UpcomingRecurringList({ entries }: { entries: UpcomingRecurringEntry[] 
 
 export function UpcomingRecurringSection({ entries }: { entries: UpcomingRecurringEntry[] }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const preview = entries.slice(0, PREVIEW_COUNT);
-  const remaining = entries.length - PREVIEW_COUNT;
+
+  const dueTodayCount = entries.filter((e) => e.daysUntil <= 0).length;
+  const dueThisWeekCount = entries.filter((e) => e.daysUntil >= 1 && e.daysUntil <= 7).length;
+  const next = entries[0];
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <RefreshCw className="size-4" />
-          Upcoming recurring supplies
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col">
-        <div className="h-[280px] overflow-y-auto">
-          {entries.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              No recurring deliveries scheduled.
-            </div>
+    <>
+      <SummaryCardShell icon={RefreshCw} title="Recurring supplies" onClick={() => setModalOpen(true)}>
+        <div className="flex gap-2">
+          <StatChip label="Due today" value={dueTodayCount} tone="destructive" />
+          <StatChip label="Due this week" value={dueThisWeekCount} tone="warning" />
+        </div>
+        <div className="border-t pt-3">
+          {next ? (
+            <>
+              <div className="text-muted-foreground mb-1 text-xs">Next supply</div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-semibold">{next.itemName}</span>
+                <span className="text-muted-foreground shrink-0 text-xs">{format(parseISO(next.nextDeliveryDate), 'MMM d, yyyy')}</span>
+              </div>
+            </>
           ) : (
-            <UpcomingRecurringList entries={preview} />
+            <div className="text-muted-foreground text-sm">No recurring deliveries scheduled.</div>
           )}
         </div>
-        {remaining > 0 && <ViewMoreButton remaining={remaining} onClick={() => setModalOpen(true)} />}
-      </CardContent>
+      </SummaryCardShell>
 
       <DashboardListModal open={modalOpen} onOpenChange={setModalOpen} title="Upcoming Recurring Supplies">
         <UpcomingRecurringList entries={entries} />
       </DashboardListModal>
-    </Card>
+    </>
   );
 }
