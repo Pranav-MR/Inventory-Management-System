@@ -3,8 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useItems } from '../api/items';
 import { useDashboardOverview } from '../api/dashboard';
+import { useItemsSearch } from '@/context/ItemsSearchContext';
 import { ItemForm } from '../components/items/ItemForm';
 import { ItemListTable } from '../components/items/ItemListTable';
+import { ItemSearchInput } from '../components/items/ItemSearchInput';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -24,8 +26,10 @@ export function ItemsPage() {
   const { data: items, isLoading, error } = useItems({ includeArchived });
   const { data: overview } = useDashboardOverview();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { query, setQuery } = useItemsSearch();
 
   const filter = searchParams.get('filter') as FilterKey | null;
+  const trimmedQuery = query.trim();
 
   const filterIds = useMemo(() => {
     if (!filter || !overview) return null;
@@ -35,7 +39,10 @@ export function ItemsPage() {
     return null;
   }, [filter, overview]);
 
-  const displayedItems = filterIds ? items?.filter((item) => filterIds.has(item.id)) : items;
+  const categoryFiltered = filterIds ? items?.filter((item) => filterIds.has(item.id)) : items;
+  const displayedItems = trimmedQuery
+    ? categoryFiltered?.filter((item) => item.name.toLowerCase().includes(trimmedQuery.toLowerCase()))
+    : categoryFiltered;
 
   function clearFilter() {
     setSearchParams((prev) => {
@@ -44,6 +51,8 @@ export function ItemsPage() {
       return next;
     });
   }
+
+  const noResults = displayedItems && displayedItems.length === 0 && (filter || trimmedQuery);
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,6 +65,8 @@ export function ItemsPage() {
         </div>
         <ItemForm />
       </div>
+
+      <ItemSearchInput value={query} onChange={setQuery} className="max-w-sm" />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
@@ -88,13 +99,24 @@ export function ItemsPage() {
         </div>
       )}
       {error && <p className="text-destructive text-sm">Could not load items.</p>}
-      {displayedItems && filter && displayedItems.length === 0 ? (
+      {noResults ? (
         <div className="text-muted-foreground rounded-xl border px-5 py-10 text-center text-sm">
-          No items match this filter.{' '}
-          <Button variant="link" className="h-auto p-0 text-sm" onClick={clearFilter}>
-            Clear it
-          </Button>{' '}
-          to see everything.
+          {trimmedQuery ? (
+            <>No items found for &ldquo;{trimmedQuery}&rdquo;.</>
+          ) : (
+            <>No items match this filter.</>
+          )}{' '}
+          {trimmedQuery && (
+            <Button variant="link" className="h-auto p-0 text-sm" onClick={() => setQuery('')}>
+              Clear search
+            </Button>
+          )}
+          {trimmedQuery && filter && ' · '}
+          {filter && (
+            <Button variant="link" className="h-auto p-0 text-sm" onClick={clearFilter}>
+              Clear filter
+            </Button>
+          )}
         </div>
       ) : (
         displayedItems && <ItemListTable items={displayedItems} />
