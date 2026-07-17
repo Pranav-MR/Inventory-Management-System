@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { UnitCombobox } from './UnitCombobox';
 
 export function ItemForm() {
   const createItem = useCreateItem();
@@ -55,7 +54,17 @@ export function ItemForm() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="item-unit">Unit</Label>
-            <UnitCombobox id="item-unit" value={unit} onChange={setUnit} />
+            <Input
+              id="item-unit"
+              required
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              placeholder="e.g. tablet, bottle, packet, kg, litre, ml"
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="item-category">Category (optional)</Label>
