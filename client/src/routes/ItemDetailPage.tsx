@@ -6,6 +6,8 @@ import { useConsumptionRateHistory } from '../api/consumption';
 import { ConsumptionRateForm } from '../components/items/ConsumptionRateForm';
 import { AverageConsumptionChart } from '../components/items/AverageConsumptionChart';
 import { ConsumptionLogSection } from '../components/items/ConsumptionLogSection';
+import { ItemOverviewCard } from '../components/items/ItemOverviewCard';
+import { QuickActionsCard } from '../components/items/QuickActionsCard';
 import { RecurringSupplyForm } from '../components/items/RecurringSupplyForm';
 import { BatchList } from '../components/batches/BatchList';
 import { AcceptBatchDialog } from '../components/batches/AcceptBatchDialog';
@@ -77,20 +79,36 @@ export function ItemDetailPage() {
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Consumption rate</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <ConsumptionRateForm itemId={item.id} current={item.consumptionRate} />
-          <div>
-            <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
-              Average consumption over time
-            </h3>
-            <AverageConsumptionChart history={rateHistory ?? []} />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <ItemOverviewCard item={item} summary={summary} />
+        </div>
+        <div className="lg:col-span-2">
+          <QuickActionsCard item={item} normalPurchaseQuantity={normalPurchaseQuantity} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-10">
+        <div className="lg:col-span-7">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Consumption rate</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <ConsumptionRateForm itemId={item.id} current={item.consumptionRate} />
+              <div>
+                <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+                  Average consumption over time
+                </h3>
+                <AverageConsumptionChart history={rateHistory ?? []} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-3">
+          <ConsumptionLogSection itemId={item.id} />
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
@@ -123,8 +141,6 @@ export function ItemDetailPage() {
         </div>
         <BatchList itemId={item.id} batches={item.batches} />
       </div>
-
-      <ConsumptionLogSection itemId={item.id} />
     </div>
   );
 }

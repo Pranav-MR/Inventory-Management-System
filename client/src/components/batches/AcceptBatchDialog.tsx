@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Info, Plus, TriangleAlert } from 'lucide-react';
 import { useCreateBatch, useEvaluateCandidateBatch } from '../../api/batches';
@@ -22,10 +22,12 @@ export function AcceptBatchDialog({
   itemId,
   hasConsumptionRate,
   normalPurchaseQuantity,
+  trigger,
 }: {
   itemId: string;
   hasConsumptionRate: boolean;
   normalPurchaseQuantity: number | null;
+  trigger?: ReactNode;
 }) {
   const queryClient = useQueryClient();
   const evaluateCandidate = useEvaluateCandidateBatch(itemId);
@@ -68,11 +70,10 @@ export function AcceptBatchDialog({
       try {
         const summary = await queryClient.fetchQuery(projectionSummaryQueryOptions(itemId));
         const recommendedQuantity = summary.nextDeliveryRecommendedQuantity;
-        if (
-          recommendedQuantity !== null &&
-          normalPurchaseQuantity !== null &&
-          recommendedQuantity < normalPurchaseQuantity
-        ) {
+        const hasExpiryRisk = summary.atRiskExpiryDate !== null;
+        const recommendedBelowNormal =
+          recommendedQuantity !== null && normalPurchaseQuantity !== null && recommendedQuantity < normalPurchaseQuantity;
+        if (recommendedQuantity !== null && (hasExpiryRisk || recommendedBelowNormal)) {
           setDeliveryWarning({ atRiskExpiryDate: summary.atRiskExpiryDate, recommendedQuantity });
           return;
         }
@@ -120,10 +121,12 @@ export function AcceptBatchDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add batch
-        </Button>
+        {trigger ?? (
+          <Button size="sm">
+            <Plus className="size-4" />
+            Add batch
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -132,7 +135,7 @@ export function AcceptBatchDialog({
 
         {deliveryWarning ? (
           <div className="flex flex-col gap-3">
-            <div className="border-success/20 border-l-success bg-success/6 text-success flex items-start gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px]">
+            <div className="border-foreground/25 border-l-foreground bg-foreground/5 text-foreground flex items-start gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px]">
               <Info className="mt-0.5 size-[18px] shrink-0" />
               <span>
                 Batch added. However:{' '}

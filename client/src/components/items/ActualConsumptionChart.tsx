@@ -18,7 +18,7 @@ function TooltipContent({ active, payload, label }: { active?: boolean; payload?
   );
 }
 
-export function ActualConsumptionChart({ entries }: { entries: ConsumptionEntry[] }) {
+export function ActualConsumptionChart({ entries, compact = false }: { entries: ConsumptionEntry[]; compact?: boolean }) {
   if (entries.length === 0) {
     return <p className="text-muted-foreground py-8 text-center text-sm">No consumption logged yet.</p>;
   }
@@ -34,20 +34,20 @@ export function ActualConsumptionChart({ entries }: { entries: ConsumptionEntry[
 
   return (
     <div className="chart-glow">
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height={compact ? 130 : 220}>
+        <BarChart data={data} margin={{ top: 8, right: compact ? 4 : 16, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
           <XAxis
             dataKey="date"
-            tickFormatter={(v: string) => format(parseISO(v), 'MMM d, yyyy')}
-            tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
+            tickFormatter={(v: string) => format(parseISO(v), compact ? 'MMM d' : 'MMM d, yyyy')}
+            tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
             stroke="var(--color-border)"
-            minTickGap={40}
+            minTickGap={compact ? 20 : 40}
           />
           <YAxis
-            tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
+            tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
             stroke="var(--color-border)"
-            width={40}
+            width={compact ? 28 : 40}
             allowDecimals={false}
             tickFormatter={(v: number) => String(roundQty(v))}
           />

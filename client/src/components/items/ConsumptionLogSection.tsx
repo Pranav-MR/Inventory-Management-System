@@ -87,20 +87,15 @@ export function ConsumptionLogSection({ itemId }: { itemId: string }) {
   const { data: entries, isLoading } = useConsumptionEntries(itemId);
 
   return (
-    <Card className="gap-4">
-      <div className="flex items-center justify-between gap-4 px-5 pt-5">
-        <div>
-          <h2 className="font-heading text-base font-bold tracking-tight">Consumption Log</h2>
-          <p className="text-muted-foreground mt-0.5 text-[13px]">
-            Actual usage history — kept separate from the Average Consumption Rate used for predictions.
-          </p>
-        </div>
+    <Card className="flex h-full flex-col gap-3">
+      <div className="flex items-start justify-between gap-2 px-5 pt-5">
+        <h2 className="font-heading text-sm font-bold tracking-tight">Consumption Log</h2>
         <ConsumptionEntryDialog
           itemId={itemId}
           trigger={
-            <Button size="sm">
-              <Plus className="size-4" />
-              Add entry
+            <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs">
+              <Plus className="size-3.5" />
+              Add
             </Button>
           }
         />
@@ -115,32 +110,31 @@ export function ConsumptionLogSection({ itemId }: { itemId: string }) {
 
       {entries && entries.length > 0 && (
         <div className="px-5">
-          <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
-            Actual consumption
-          </h3>
-          <ActualConsumptionChart entries={entries} />
+          <ActualConsumptionChart entries={entries} compact />
         </div>
       )}
 
       {entries && entries.length === 0 && (
-        <p className="text-muted-foreground px-5 pb-5 text-sm">No consumption logged yet.</p>
+        <p className="text-muted-foreground flex-1 px-5 pb-5 text-sm">No consumption logged yet.</p>
       )}
 
       {entries && entries.length > 0 && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Quantity consumed</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {entries.map((entry) => (
-              <ConsumptionEntryRow key={entry.id} itemId={itemId} entry={entry} />
-            ))}
-          </TableBody>
-        </Table>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {entries.map((entry) => (
+                <ConsumptionEntryRow key={entry.id} itemId={itemId} entry={entry} />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </Card>
   );
