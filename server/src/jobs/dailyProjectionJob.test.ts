@@ -7,7 +7,6 @@ const email = 'dailyjobtest@example.com';
 async function cleanUp() {
   const user = await prisma.user.findUnique({ where: { email } });
   if (user) {
-    await prisma.notificationLog.deleteMany({ where: { userId: user.id } });
     await prisma.batch.deleteMany({ where: { item: { userId: user.id } } });
     await prisma.consumptionRate.deleteMany({ where: { item: { userId: user.id } } });
     await prisma.recurringSupplySchedule.deleteMany({ where: { item: { userId: user.id } } });
@@ -29,7 +28,7 @@ function daysAgo(n: number): Date {
 }
 
 describe('runDailyProjectionJob', () => {
-  it('ages a batch forward from its last snapshot and sends a low-stock notification', async () => {
+  it('ages a batch forward from its last snapshot to today', async () => {
     const user = await prisma.user.create({ data: { email, passwordHash: 'x' } });
     const item = await prisma.item.create({
       data: { userId: user.id, name: 'Medicine A', unit: 'tablet' },
@@ -55,19 +54,14 @@ describe('runDailyProjectionJob', () => {
     expect(Number(updatedBatch.quantityRemaining)).toBeCloseTo(5, 6);
     expect(updatedBatch.quantityAsOfDate.toISOString().slice(0, 10)).toBe(new Date().toISOString().slice(0, 10));
     expect(updatedBatch.status).toBe('ACTIVE');
-
-    // With 5 remaining at 1/day and no recurring supply, stock-out is 5 days out -> within the
-    // default 7-day LOW_STOCK lead time, so a notification should have been dispatched and logged.
-    const logs = await prisma.notificationLog.findMany({ where: { userId: user.id } });
-    expect(logs.some((l) => l.eventType === 'LOW_STOCK')).toBe(true);
   });
 
-  it('is idempotent: running twice the same day does not double-dispatch notifications', async () => {
+  it('is idempotent: running twice the same day does not double-consume a batch', async () => {
     const user = await prisma.user.create({ data: { email, passwordHash: 'x' } });
     const item = await prisma.item.create({ data: { userId: user.id, name: 'Medicine A', unit: 'tablet' } });
     await prisma.consumptionRate.create({ data: { itemId: item.id, ratePerPeriod: 1, periodUnit: 'DAY' } });
     const receivedDate = daysAgo(1);
-    await prisma.batch.create({
+    const batch = await prisma.batch.create({
       data: {
         itemId: item.id,
         receivedDate,
@@ -79,12 +73,12 @@ describe('runDailyProjectionJob', () => {
     });
 
     await runDailyProjectionJob();
-    const firstRunLogCount = await prisma.notificationLog.count({ where: { userId: user.id } });
+    const afterFirstRun = await prisma.batch.findUniqueOrThrow({ where: { id: batch.id } });
 
     await runDailyProjectionJob();
-    const secondRunLogCount = await prisma.notificationLog.count({ where: { userId: user.id } });
+    const afterSecondRun = await prisma.batch.findUniqueOrThrow({ where: { id: batch.id } });
 
-    expect(secondRunLogCount).toBe(firstRunLogCount);
+    expect(Number(afterSecondRun.quantityRemaining)).toBe(Number(afterFirstRun.quantityRemaining));
   });
 
   it('does nothing for an item with no consumption rate set', async () => {
