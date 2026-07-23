@@ -20,3 +20,7 @@ export function refresh() {
 export function me() {
   return apiClient.get<User>('/auth/me').then((res) => res.data);
 }
+
+export function updateProfile(input: { name?: string; currentPassword?: string; newPassword?: string }) {
+  return apiClient.patch<User>('/auth/me', input).then((res) => res.data);
+}

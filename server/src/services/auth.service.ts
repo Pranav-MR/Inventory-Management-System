@@ -83,3 +83,23 @@ export async function revokeRefreshToken(rawToken: string) {
 export async function getUserById(userId: string) {
   return prisma.user.findUnique({ where: { id: userId } });
 }
+
+export async function updateProfile(
+  userId: string,
+  input: { name?: string; currentPassword?: string; newPassword?: string },
+) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+
+  const data: { name?: string; passwordHash?: string } = {};
+  if (input.name !== undefined) {
+    data.name = input.name;
+  }
+
+  if (input.newPassword) {
+    const valid = await bcrypt.compare(input.currentPassword ?? '', user.passwordHash);
+    if (!valid) throw new AuthError('Current password is incorrect');
+    data.passwordHash = await bcrypt.hash(input.newPassword, SALT_ROUNDS);
+  }
+
+  return prisma.user.update({ where: { id: userId }, data });
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SettingsModal } from '@/components/settings/SettingsModal';
 import { SidebarNav } from './SidebarNav';
 import { useAuth } from '@/context/AuthContext';
 
@@ -25,6 +26,7 @@ function initialsFrom(nameOrEmail: string) {
 export function TopBar({ title }: { title?: string }) {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <header className="bg-background/80 sticky top-0 z-20 flex h-14 items-center gap-3 border-b px-4 backdrop-blur-sm md:px-6">
@@ -63,6 +65,10 @@ export function TopBar({ title }: { title?: string }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <Settings className="size-4" />
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onClick={() => logout()}>
               <LogOut className="size-4" />
               Log out
@@ -70,6 +76,8 @@ export function TopBar({ title }: { title?: string }) {
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   );
 }

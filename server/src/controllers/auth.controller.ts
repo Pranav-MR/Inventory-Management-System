@@ -16,6 +16,17 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const updateProfileSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    currentPassword: z.string().min(1).optional(),
+    newPassword: z.string().min(8).optional(),
+  })
+  .refine((data) => !data.newPassword || data.currentPassword, {
+    message: 'Current password is required to set a new password',
+    path: ['currentPassword'],
+  });
+
 function refreshCookieOptions() {
   return {
     httpOnly: true,
@@ -70,5 +81,11 @@ export async function me(req: Request, res: Response) {
     res.status(404).json({ error: 'User not found' });
     return;
   }
+  res.json(toUserDto(user));
+}
+
+export async function updateProfile(req: Request, res: Response) {
+  const input = updateProfileSchema.parse(req.body);
+  const user = await authService.updateProfile(req.userId!, input);
   res.json(toUserDto(user));
 }
