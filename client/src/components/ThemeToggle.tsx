@@ -30,7 +30,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       className={cn(
-        'relative transition-[background-color,border-color,box-shadow] duration-300 ease-in-out motion-reduce:transition-none',
+        'relative rounded-full transition-[background-color,border-color,box-shadow] duration-300 ease-in-out motion-reduce:transition-none',
         isDark ? 'border-primary/30 bg-primary/10' : 'border-[#f59e0b]/35 bg-[#fef3c7]/70',
         glowing &&
           (isDark

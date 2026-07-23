@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarClock, PackageSearch, Boxes } from 'lucide-react
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
 import { useDashboardOverview } from '../../api/dashboard';
 
 function Stat({
@@ -23,6 +24,8 @@ function Stat({
   criticalWhenPositive?: boolean;
   to?: string;
 }) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
   const active = criticalWhenPositive && value > 0;
 
   const card = (
@@ -30,13 +33,19 @@ function Stat({
       className={cn(
         'transition-transform',
         to && 'hover:scale-[1.02] cursor-pointer',
-        active && 'border-destructive/30 shadow-[0_8px_32px_rgba(249,115,22,0.15),0_0_26px_rgba(249,115,22,0.2)]',
+        active &&
+          'border-destructive/30 shadow-[0_8px_32px_rgba(249,115,22,0.15),0_0_26px_rgba(249,115,22,0.2)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.35)]',
       )}
     >
       <CardContent className="px-5 py-4">
         <div
           className="mb-3.5 flex size-[42px] shrink-0 items-center justify-center rounded-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)]"
-          style={{ background: iconGradient, boxShadow: `${iconGlow}, inset 0 1px 1px rgba(255,255,255,0.35)` }}
+          style={{
+            background: iconGradient,
+            boxShadow: isDark
+              ? 'inset 0 1px 1px rgba(255,255,255,0.15)'
+              : `${iconGlow}, inset 0 1px 1px rgba(255,255,255,0.35)`,
+          }}
         >
           <Icon className="size-5 text-white" />
         </div>

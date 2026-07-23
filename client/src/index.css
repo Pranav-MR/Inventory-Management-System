@@ -79,26 +79,26 @@
 }
 
 .dark {
-  --background: #0a0a12;
-  --foreground: #f5f4f7;
+  --background: #07080b;
+  --foreground: #e7e9ee;
 
-  --card: rgba(255, 255, 255, 0.05);
-  --card-foreground: #f5f4f7;
+  --card: #101216;
+  --card-foreground: #e7e9ee;
 
-  --popover: rgba(20, 18, 28, 0.9);
-  --popover-foreground: #f5f4f7;
+  --popover: #12141a;
+  --popover-foreground: #e7e9ee;
 
   --primary: #38bdf8;
   --primary-foreground: #ffffff;
 
-  --secondary: rgba(255, 255, 255, 0.06);
-  --secondary-foreground: #e5e3ea;
+  --secondary: #1a1f2a;
+  --secondary-foreground: #d7dae2;
 
-  --muted: rgba(255, 255, 255, 0.04);
-  --muted-foreground: #8b8798;
+  --muted: #171b24;
+  --muted-foreground: #8b93a6;
 
-  --accent: rgba(255, 255, 255, 0.06);
-  --accent-foreground: #e5e3ea;
+  --accent: #1c212c;
+  --accent-foreground: #e7e9ee;
 
   --destructive: #fb7185;
   --destructive-foreground: #2a0a10;
@@ -109,17 +109,17 @@
   --warning: #fbbf24;
   --warning-foreground: #402a04;
 
-  --border: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.06);
   --ring: rgba(56, 189, 248, 0.5);
 
-  --sidebar: rgba(255, 255, 255, 0.03);
-  --sidebar-foreground: #9a96ab;
+  --sidebar: #07080b;
+  --sidebar-foreground: #8b93a6;
   --sidebar-primary: #4ade80;
   --sidebar-primary-foreground: #06240f;
-  --sidebar-accent: rgba(255, 255, 255, 0.05);
-  --sidebar-accent-foreground: #f5f4f7;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: #171b24;
+  --sidebar-accent-foreground: #e7e9ee;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
   --sidebar-ring: rgba(56, 189, 248, 0.5);
 
   --chart-1: #4ade80;
@@ -198,12 +198,12 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   .dark .glow-shadow {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   }
   .chart-glow .recharts-area-curve {
     filter: drop-shadow(0 0 3px rgba(74, 222, 128, 0.35));
   }
   .dark .chart-glow .recharts-area-curve {
-    filter: drop-shadow(0 0 5px rgba(74, 222, 128, 0.65));
+    filter: drop-shadow(0 0 2px rgba(74, 222, 128, 0.3));
   }
 }

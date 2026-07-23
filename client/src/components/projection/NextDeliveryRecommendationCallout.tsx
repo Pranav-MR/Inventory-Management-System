@@ -25,7 +25,7 @@ export function NextDeliveryRecommendationCallout({
   if (!hasExpiryRisk && !recommendedBelowNormal) return null;
 
   return (
-    <div className="border-foreground/25 border-l-foreground bg-foreground/5 text-foreground flex items-center gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px] shadow-[0_0_20px_rgba(0,0,0,0.06)] backdrop-blur-lg dark:shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+    <div className="border-foreground/25 border-l-foreground bg-foreground/5 text-foreground flex items-center gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px] shadow-[0_0_20px_rgba(0,0,0,0.06)] backdrop-blur-lg dark:shadow-none">
       <Info className="size-[18px] shrink-0" />
       <span>{describeNextDeliveryRecommendation(atRiskExpiryDate, nextDeliveryRecommendedQuantity)}</span>
     </div>

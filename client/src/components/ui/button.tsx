@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           'bg-[linear-gradient(135deg,#38bdf8,#3b82f6_60%,#2563eb)] text-white shadow-[0_4px_20px_rgba(56,189,248,0.45)] hover:scale-[1.04] hover:shadow-[0_6px_28px_rgba(56,189,248,0.65)] dark:shadow-[0_4px_20px_rgba(56,189,248,0.45)] not-dark:shadow-[0_4px_16px_rgba(59,130,246,0.3)]',
         destructive:
-          'bg-destructive/10 text-destructive border border-destructive/40 shadow-[0_0_20px_rgba(251,113,133,0.2)] hover:scale-[1.04] hover:shadow-[0_0_30px_rgba(251,113,133,0.4)]',
+          'bg-destructive/10 text-destructive border border-destructive/40 shadow-[0_0_20px_rgba(251,113,133,0.2)] hover:scale-[1.04] hover:shadow-[0_0_30px_rgba(251,113,133,0.4)] dark:shadow-none dark:hover:shadow-none',
         outline:
           'border border-input bg-transparent hover:scale-[1.03] hover:bg-accent hover:text-accent-foreground',
         secondary:

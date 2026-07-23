@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Menu, Settings } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -23,13 +23,13 @@ function initialsFrom(nameOrEmail: string) {
   return initials.join('') || base.slice(0, 2).toUpperCase();
 }
 
-export function TopBar({ title }: { title?: string }) {
+export function TopBar() {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <header className="bg-background/80 sticky top-0 z-20 flex h-14 items-center gap-3 border-b px-4 backdrop-blur-sm md:px-6">
+    <header className="bg-background/80 border-border glow-shadow sticky top-3 z-20 mt-3 mr-3 ml-auto flex h-14 w-fit items-center gap-3 self-end rounded-[1.5rem] border px-4 backdrop-blur-sm md:gap-4 md:px-6 dark:bg-background dark:backdrop-blur-none">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)}>
           <Menu className="size-5" />
@@ -42,40 +42,47 @@ export function TopBar({ title }: { title?: string }) {
         </SheetContent>
       </Sheet>
 
-      <h1 className="font-heading flex-1 truncate text-sm font-bold md:text-base">{title}</h1>
+      <div className="flex items-center gap-3 md:gap-4">
+        <ThemeToggle />
 
-      <ThemeToggle />
-
-      {user && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="rounded-full p-[2px] outline-none [background:linear-gradient(135deg,#4ade80,#3b82f6)]">
-              <Avatar className="bg-background size-8">
-                <AvatarFallback className="text-foreground bg-transparent text-xs font-bold">
-                  {initialsFrom(user.name ?? user.email)}
-                </AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">{user.name ?? 'Account'}</span>
-                <span className="text-muted-foreground truncate text-xs">{user.email}</span>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-              <Settings className="size-4" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={() => logout()}>
-              <LogOut className="size-4" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="hover:bg-accent flex items-center gap-2 rounded-full py-1 pr-2 pl-1 outline-none transition-colors">
+                <div className="rounded-full p-[2px] [background:linear-gradient(135deg,#4ade80,#3b82f6)]">
+                  <Avatar className="bg-background size-8">
+                    <AvatarFallback className="text-foreground bg-transparent text-xs font-bold">
+                      {initialsFrom(user.name ?? user.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="hidden flex-col items-start leading-tight sm:flex">
+                  <span className="text-sm font-semibold">{user.name ?? 'Account'}</span>
+                  <span className="text-muted-foreground max-w-[140px] truncate text-xs">{user.email}</span>
+                </div>
+                <ChevronDown className="text-muted-foreground size-4 shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">{user.name ?? 'Account'}</span>
+                  <span className="text-muted-foreground truncate text-xs">{user.email}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                <Settings className="size-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => logout()}>
+                <LogOut className="size-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>

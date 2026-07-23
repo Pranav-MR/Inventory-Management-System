@@ -38,8 +38,8 @@ export function ExpiryWarningBanner({ summary }: { summary: ProjectionSummary })
           className={cn(
             'flex items-center gap-3 rounded-xl border border-l-[3px] px-4 py-3.5 text-[13.5px] backdrop-blur-lg',
             b.tone === 'critical'
-              ? 'border-destructive/20 border-l-destructive bg-destructive/6 text-destructive shadow-[0_0_24px_rgba(251,113,133,0.15)]'
-              : 'border-warning/20 border-l-warning bg-warning/6 text-warning shadow-[0_0_24px_rgba(251,191,36,0.12)]',
+              ? 'border-destructive/20 border-l-destructive bg-destructive/6 text-destructive shadow-[0_0_24px_rgba(251,113,133,0.15)] dark:shadow-none'
+              : 'border-warning/20 border-l-warning bg-warning/6 text-warning shadow-[0_0_24px_rgba(251,191,36,0.12)] dark:shadow-none',
           )}
         >
           {b.tone === 'critical' ? (
